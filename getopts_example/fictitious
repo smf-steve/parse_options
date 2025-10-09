@@ -1,7 +1,7 @@
 #! /usr/bin/env bash
 
 function fictitious() {
-  # Usage: fictititous [options] [--] arg1 arg2
+  # Usage: fictitious [options] [--] arg1 arg2
   #
   # Short Options: "xltif:d::-::"
   #    - with no arguments:       x, l, t, i
@@ -13,48 +13,151 @@ function fictitious() {
   #   - with required arguments:  --dir path, --dir=path
   #   - with optional arguments:  --tag [pattern], --tag[=pattern]
 
-  # Process Command line arguments using getopts
-
-  # Set the Position Parameters to the Current Position Parameters
-  set -- "$@"    # This step is superfluous, but illustrative
-
+  ## Process Command line arguments using getopts
+  #
   # Use getopts to support the processing of options:
   # Usage:  optstring name [arg ...]
   #    optstring: "xltif:d::-:"
   #      - note each short option is included in the string
-  #      - a single colon (:) denotes the proceeding character requires an artument
+  #      - a single colon (:) denotes the proceeding character requires an argument
   #        - i.e., the option -f requires an argument
   #      - a double colon (::) denotes the proceeding character has an optional argument
   #        - i.e., the option -d may have an argument, as was as the option --
   #    name:      flag
-  #    [arg ...]: ${1}, ${2}, ... ${!#}
+  #    [parameter ...]: "$@", which is equivalent to ${1}, ${2}, ... ${!#}
   #
   # Long options are managed via the "--" short option, but with extra processing
 
+  # Global variables associated with getopts
+  : ${OPTIND}  # The current index of the parameter being processed
+  : flag       # The character associated with the current option being processed
+  : ${OPTARG}  # The optional argument associated with current option being processed
+
+
+  # Set the Position Parameters to the Current Positional Parameters
+  set -- "$@"    # This step is superfluous, but illustrative
+
+  OPTIND=1    # Rest the index associated with the getops utility
   while getopts "xltif:d::-::" flag ; do
     case "${flag}" in
-      ( x | l | t )  : ;;
-      ( i )          : ;;
+      # The following options do not have an arguments
+      ( x | l | t )
+           echo -${flag} has been identified, which has no arguments.
+           echo -${flag} stems from \${ $OPTIND }.
+           echo
+           ;;
 
-      ( - ) case "${OPTARG}" in
+      ( i )
+           echo -${flag} has been identified, which has no arguments.
+           echo -${flag} stems from \${$OPTIND}.
+           echo
+
+           # Insert code to turn on case insensitivity (see option "ignore-case" below)
+           ;;
+
+      # The following option has an argument
+      ( f )
+           echo -${flag} has been identified, which has the argument \"${OPTARG}\".
+           echo -${flag} could stem from either \${$(({OPTIND}-1)} or \${${OPTIND}}.
+           echo ${OPTARG} stems from \${$OPTIND}.
+           echo 
+           ;;
+
+      # Following may have an argument
+      ( d )
+          if [[ -z ${OPTARG} ]] ; then
+            echo -${flag} has been identified, without an argument
+            echo -${flag} stems from \${$OPTIND}.
+          else
+            echo -${flag} has been identified, with the argument \"${OPTARG}\".
+            echo -${flag} could stem from either \${$(({OPTIND}-1)} or \${${OPTIND}}.
+            echo ${OPTARG} stems from \${$OPTIND}.
+          fi
+          ;;
+
+
+      ( - ) 
+          case "${OPTARG}" in
               # Special case of "--"
               ( - )  : ;;
 
+              # The following option has no arguments
+              ( ignore-case ) 
+                  echo -${flag} has been identified, with the argument \"${OPTARG}\".
+                  echo It appears the option is \"-${flag}${OPTARG}\"
+                  echo -${flag}${OPTARG} stems from \${${OPTIND}}.
+                  echo -${flag}${OPTARG} does not have an argument
 
-              # Following has no arguments
-              ( ignore-case ) : ;;
+                  # Insert code to turn on case insensitivity (see option "f" above)
+                  ;;
 
-              # Following have required arguments
-              ( dir )         : ;;
-              ( dir=* )       : ;;
+              # The following options must have an argument
+              ( dir=* )
+                  option_name="dir"
+                  option_arg=${OPTARG#dir=}    # extract the option_arg from ${OPTARG}
 
-              # Folllowing have an optional argument
-              ( tag )         : ;;
-              ( tag=* )       : ;;
+                  echo -${flag} has been identified, with the argument \"${OPTARG}\".
+                  echo It appears the option is \"-${flag}${option_name}\"
+                  echo -${flag}${option_name} stems from \${${OPTIND}}.
 
-            esac
-            ;;
+                  echo -${flag}${option_name} has the argument "${option_arg}"
+                  echo ${option_arg} stems from \${${OPTIND}}.
+                  echo 
 
+                  ;;
+
+              ( dir ) 
+                  option_name=${OPTARG}
+                  (( OPTIND ++ ))            # consume the next parameter
+                  option_arg=${!OPTIND}      # which is for the required argument
+
+                  echo -${flag} has been identified, with the argument \"${OPTARG}\".
+                  echo It appears the option is \"-${flag}${option_name}\"
+                  echo -${flag}${option_name} stems from \${$((OPTIND-1))}}.
+                  echo -${flag}${option_name} has the argument "${dir_arg}"
+                  echo ${option_arg} stems from \${${OPTIND}}.
+                  echo 
+
+                  ;;
+
+              # The following options may have argument
+              ( tag=* )    # The pattern determined that an option exists
+                  option_name="tag"
+                  option_arg=${OPTARG#tag=}    # extract the option_arg from ${OPTARG}
+
+                  echo -${flag} has been identified, with the argument \"${OPTARG}\".
+                  echo It appears the option is \"-${flag}${option_name}\"
+                  echo -${flag}${option_name} stems from \${${OPTIND}}.
+                  echo -${flag}${option_name} has the argument "${option_arg}"
+                  echo ${option_arg} stems from \${${OPTIND}}.
+                  echo 
+                  
+                  ;;
+
+              ( tag )     # The pattern does not determine that an optional argument exists
+                  option_name=${OPTARG}
+                  option_arg=""
+
+                  next_parameter=${!((OPTIND + 1))}
+                  if [[ ${next_parameter:0:1} != '-' ]] ; then
+                    # the optional argument exists
+                    (( OPTIND ++ ))            # consume the next parameter
+                    option_arg=${!OPTIND}      # which is for the required argument
+                  fi
+
+                  echo -${flag} has been identified, with the argument \"${OPTARG}\".
+                  echo It appears the option is \"-${flag}${option_name}\"
+                  if [[ -z ${option_arg} ]]
+                    echo -${flag}${option_name} stems from \${OPTIND}}. 
+                    echo -${flag}${option_name} does not have an argument.
+                  else
+                    echo -${flag}${option_name} stems from \${$((OPTIND-1))}}. 
+                    echo -${flag}${option_name} has the argument \"${option_arg}\"
+                    echo ${option_arg} stems from \${${OPTIND}}.
+                  fi
+                  ;;
+          esac
+          ;;
     esac
 
    # Programming Clarity:
@@ -72,5 +175,3 @@ function fictitious() {
    #     - must be a argument typical to denote stdin
    #     - be not be the first argument, or it must follow "--"
    #   * "--" be supported, and is trigger as "-::"
-
-kk
