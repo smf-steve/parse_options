@@ -243,6 +243,8 @@ without the = sign, you need to deal with the ambiguity of "file" being
       - unless we have a marker, i.e., =
       - or the user handles it
 ---
+
+# 
 Thoughts on arguments with shorten input
 
 valid long option   "something someone test"
@@ -372,5 +374,30 @@ getopts "a+-:" option -+ --blue color --red arg1 -x ; echo $option $OPTARG
 "" \?  OPTIND==5
 
 
+
+dwarf:parse_options steve$ /opt/homebrew/opt/gnu-getopt/bin/getopt --help
+
+
+
+Usage:
+ getopt <optstring> <parameters>
+ getopt [options] [--] <optstring> <parameters>
+ getopt [options] -o|--options <optstring> [options] [--] <parameters>
+
+Parse command options.
+
+Options:
+ -a, --alternative             allow long options starting with single -
+ -l, --longoptions <longopts>  the long options to be recognized
+ -n, --name <progname>         the name under which errors are reported
+ -o, --options <optstring>     the short options to be recognized
+ -q, --quiet                   disable error reporting by getopt(3)
+ -Q, --quiet-output            no normal output
+ -s, --shell <shell>           set quoting conventions to those of <shell>
+ -T, --test                    test for getopt(1) version
+ -u, --unquoted                do not quote the output
+
+ -h, --help                    display this help
+ -V, --version                 display version
 
 
