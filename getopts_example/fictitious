@@ -1,0 +1,76 @@
+#! /usr/bin/env bash
+
+function fictitious() {
+  # Usage: fictititous [options] [--] arg1 arg2
+  #
+  # Short Options: "xltif:d::-::"
+  #    - with no arguments:       x, l, t, i
+  #    - with required arguments: f
+  #    - with optional arguments: d
+  #
+  # Long Options (introduced by the short option of '-')
+  #   - with no arguments:        --ignore-case
+  #   - with required arguments:  --dir path, --dir=path
+  #   - with optional arguments:  --tag [pattern], --tag[=pattern]
+
+  # Process Command line arguments using getopts
+
+  # Set the Position Parameters to the Current Position Parameters
+  set -- "$@"    # This step is superfluous, but illustrative
+
+  # Use getopts to support the processing of options:
+  # Usage:  optstring name [arg ...]
+  #    optstring: "xltif:d::-:"
+  #      - note each short option is included in the string
+  #      - a single colon (:) denotes the proceeding character requires an artument
+  #        - i.e., the option -f requires an argument
+  #      - a double colon (::) denotes the proceeding character has an optional argument
+  #        - i.e., the option -d may have an argument, as was as the option --
+  #    name:      flag
+  #    [arg ...]: ${1}, ${2}, ... ${!#}
+  #
+  # Long options are managed via the "--" short option, but with extra processing
+
+  while getopts "xltif:d::-::" flag ; do
+    case "${flag}" in
+      ( x | l | t )  : ;;
+      ( i )          : ;;
+
+      ( - ) case "${OPTARG}" in
+              # Special case of "--"
+              ( - )  : ;;
+
+
+              # Following has no arguments
+              ( ignore-case ) : ;;
+
+              # Following have required arguments
+              ( dir )         : ;;
+              ( dir=* )       : ;;
+
+              # Folllowing have an optional argument
+              ( tag )         : ;;
+              ( tag=* )       : ;;
+
+            esac
+            ;;
+
+    esac
+
+   # Programming Clarity:
+   #
+   # 1. It would be better if the option of -i and -ignore-case were together
+   # in the same switch class
+   # 
+   # 2. It would be better if a double switch case was not require
+   #
+   # 3. It would be better if there was way to "mark" long option as to their
+   #     argument type as is the cas with short options
+
+   # Exceptions:
+   #   * use of a single -
+   #     - must be a argument typical to denote stdin
+   #     - be not be the first argument, or it must follow "--"
+   #   * "--" be supported, and is trigger as "-::"
+
+kk
