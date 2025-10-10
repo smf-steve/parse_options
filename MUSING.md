@@ -99,12 +99,42 @@ One might say, more ramblings as opposed to musing
     ```
 
     1. The use of ":" and "::" are used, maybe, to conform to the usage in getopts/getops
-    1. However, it might be a useless throwback
+    1. The use of ":" and "::" it might be a useless throwback
+    1. each variable is considered a regular expression
+       - a list can be separated by either a pipe (|) or a space
+       - e.g.,
+         - style="early modern apostrophus vinculum"
+         - style="early | modern | apostrophus | vinculum"
+
+    1. Perhaps we can add some type of argument after the code to provide a description
+       - said description code be used as part of "usage" or man page
+
+    ```TBD
+     -v | --version    { ; }
+           [
+             Prints the Git suite version that the git program came from.
+             This option is internally converted to git version ... and accepts
+              the same options as the git-version(1) command. If --help is also
+              given, it takes precedence over --version.
+            ]
+    ```
 
 
 
-# Current Work
-A bash script to extend 'getopts'
+# Next Steps/Work
+  1. muse some more
+  1. finish working on fictitious
+  1. validate parse_options works, an examplar the use of getopts
+  1. create a version of fictitious using getop
+  1. create a version of parse_option using getop
+  1. refine musing
+  1. create TDB specification for man git
+
+
+---
+Notes are below (to be review and cleanup )
+
+# A bash script to extend 'getopts'
 
 
 
