@@ -4,6 +4,104 @@ This file contains my musing as a work throw what I want to accomplish in this r
 These should be consider akin notes that you take during a class lecture.
 One might say, more ramblings as opposed to musing
 
+# Current Recap
+  1. getopts:
+     - nice utility to simplify the use of condensed options -lst, as opposed to -l -s -t
+     - its a hack to use the tool to use long options, e.g., --long value
+     - views the option's name as the string _after_ the first hyphen (-)
+       * given: -s and --long, the names are s and -long, respectively
+     - the programmer's switch/case statement refers to these names, and special is need  for long options
+
+  1. getopt:
+     - canonicalizes the presentation of options
+     - leverage the getopts approach for support of condensed options
+     - furthers error checking of missing arguments, etc., 
+     - the naming of options is more using: i.e., its -l for -l and --long for --long
+     - the programmer's switch/case statement is more uniform
+       * moreover a single case pattern can more easily refer to both a long and short option
+         ```bash
+         ( -l | --list )   # place the code here associated
+                           # with the here "list" option
+         ```
+     - the programmer's switch/case code fails into a recognized pattern
+
+  1. {TBD}:
+    I'm thinking of using compiler related approach to generate the code pattern for program.  This approach is based upon the tool "Lex/Flex". If you are familiar with Lex, perhaps the following musing give you some insight to what I'm thinking.
+
+    ```tbd
+    # This section holds variable definitions
+    style="early modern apostrophus vinculum"
+
+    boolean="true false"
+    number=[0-9]+
+
+    %%
+    # This section holds option specifications
+
+    -l | --list            { # insert code for the list option
+                             # "list" option has no arguments
+                             ;
+                           }
+
+    -h :                   {
+                             # "h" option requires a value
+                             # said can be anything
+                             # perhaps we should use "*" instead of :
+                           }
+
+    -d {boolean}           { 
+                             # "d" option requires an argument
+                             ;
+                           }
+
+  
+    -n {number}            { 
+                             # "n" option requires a number
+                             ;
+                           }
+
+    --{style}              { 
+                             # create an option for each value of ${style}
+                             # i.e., early, modern, apostrophus, and vinculum 
+                             # use the same code to support the option
+                             ;
+                           }
+
+    # Options that have an optional value
+
+    --debug     ::         {
+                             # "debug" option has an optional value
+                             # the default value is ""
+                             #   --i.e., no default value is provide
+                           }
+
+
+
+
+    --highlight :true {boolean}
+                           {
+                            # highlight has a optional value.
+                            # if NOT provided the default is "true"
+                            # if provided it must be either "true" or "false"
+                            ;
+                           }
+
+    # Now for a more complex example
+
+    -{style:0:1}     |     # use the first letter in each style to create an option
+    --{style}        |
+    --style {style}        { 
+                             # insert code the style option
+                             # this option can be expressed in a number of ways
+                             ;
+                            }
+
+    ```
+
+    1. The use of ":" and "::" are used, maybe, to conform to the usage in getopts/getops
+    1. However, it might be a useless throwback
+
+
 
 # Current Work
 A bash script to extend 'getopts'

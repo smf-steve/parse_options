@@ -4,9 +4,11 @@
 
 This repository has been created for the following purposes:
 
-  1. to review and describe the design of command-line utilities of _getopts_ and _getopt_.
+  1. to review and describe the design of command-line utilities of _getopts_.
 
-  2. to exemplify the use of long-form options using _getopts_ provide an example of command line processing that includes long-form options.
+  2. to provide an example of using long-form options via _getopts_ 
+
+  1. to provide an example of command line processing that includes long-form options.
 
   3. to provide the alternative command-line utility, called {TBD}, that provides a more {insert adjective} utility
 
