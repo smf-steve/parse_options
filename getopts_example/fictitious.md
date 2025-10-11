@@ -14,16 +14,16 @@
   'fictitious'.  The following options are available:
 
   Options with no arguments
-    -x      Add a description for this option.
-    -l      Add a description for this option.
-    -t      Add a description for this option.
+    -x         Add a description for this option.
+    -l         Add a description for this option.
+    -t         Add a description for this option.
 
   Options with mandatory arguments
-    -f file Add a description for this option.
+    -f file    Add a description for this option.
 
   Option with optional arguments
-    -d[N]   Add a description for this option.
-    -d N    Add a description for this option.
+    -d[N]      Add a description for this option.
+    -d N       Add a description for this option.
 
   Long Option with no arguments
     -i, --ignore-case
@@ -57,4 +57,4 @@
     - case 2: `fictitious --tag arg1 -- arg2`
 
   Otherwise, the greedy principle is applied to resolve the ambiguity with `case 2` being the final interpretation. 
-  
+
