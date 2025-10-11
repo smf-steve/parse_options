@@ -123,16 +123,38 @@ One might say, more ramblings as opposed to musing
 
 # Next Steps/Work
   1. muse some more
-  1. finish working on fictitious
-  1. validate parse_options works, an examplar the use of getopts
-  1. create a version of fictitious using getop
-  1. create a version of parse_option using getop
+  1. finish working on fictitious, an examplar for using getopts
+  1. validate parse_options works
+     - based upon musing of improving getopts
+     - appears to be comparable to getopt's functionality
+  1. create a version of fictitious, as an examplar for using getopt
+  1. create a version of parse_option using getopt
   1. refine musing
   1. create TDB specification for man git
 
 
 ---
 Notes are below (to be review and cleanup )
+
+## getopts optstring flag [args]
+### optstring notes:
+
+  - OPTSTRING="xy"   | two options without values
+  - OPTSTRING="x:y"  | option x with value and option y without a value
+  - OPTSTRING="x:y:" | both x and you has values
+  - OPTSTRING=":x:y" | define the special char :, when an opt that is expected is missing
+
+  - OPSTRING="x::"   | technically not supported, x has an option value
+
+
+### flag
+   - one of the characters in OPTSTRING
+   - : the special char to denote a option that requires a value does not
+     * OPTARG contains the incomplete option
+   - ? the special char to denote we say an invalid option, 
+     * OPTARG contains the invalid option
+   - + | - 
+
 
 # A bash script to extend 'getopts'
 
@@ -527,5 +549,16 @@ Options:
 
  -h, --help                    display this help
  -V, --version                 display version
+
+
+--
+What is faster
+   [[ ${F:0:1} == '-' ]]
+   [[ $F       == -* ]]     <--  by timing the execution..  
+   
+   1. Why: Conjecture
+      1. the -* form is older, and hence optimized
+      1. the {V:d:l} has more variants, but we just want a special case.
+      
 
 
