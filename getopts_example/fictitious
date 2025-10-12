@@ -1,9 +1,33 @@
 #! /usr/bin/env bash
 
+# These are not used
 alias getopts_lookahead_word='echo ${!OPTIND}'
 alias getopts_next_word='{ echo ${!OPTIND}((OPTIND ++)) }'
 
 
+# Need to determine what to do when
+#  --dir without an arg is given
+# currently we stop
+# should we continue, but if so, how do we reset
+#   - skip of --dir <--
+#   - skip of --tag
+
+# Need to work on  "d::"
+# ./fictitious -xf no -fhell -xfx   <<-- actual
+#  -f no   : is valid
+#  -fhell : is valid --> -f hell
+#  -xfx   : is valid --> -f x
+
+# If "d"
+# ./fictitious -xd no -dhell -xdx   <<- conjectuire
+#  -xd no  -->  -d no    # same process as --dir 
+#  -dhell  -->  -d hell  # but getops will return just d
+#                        # need to play with ${OPTIND - 1}
+#                        # two assumptions:
+#                        #  1. h is an option, --> d has not option
+#                        #  1. h is not an option --> d has hell as the option
+#   -xdx                 #  this is the case above where h is an option
+#           
 
 # This file is designed as an example of implementing 
 # command-line options using getopts.
@@ -109,7 +133,7 @@ function fictitious() {
       ( x | l | t )
            echo "The option '-${flag}' has been identified with no value."
            local position=
-           echo "    '-${flag}' stems from \${${OPTPOSITION}} == '${!OPTPOSITION}'."
+           echo "    '-${flag}' stems from \${${OPTIND}} == '${!OPTPOSITION}'."
            # it can stem from either 
            #     OPTIND     if it is NOT last in the list
            #     OPTIND - 1 if it is the last in the list
@@ -241,7 +265,7 @@ function fictitious() {
                     echo "    '--${OPTBANNER}' stems from \${${OPTBANNERIND}} == '${!OPTBANNERIND}'."
                   else
                     echo "The option '--${OPTBANNER}' has been identified with the value '${OPTVALUE}'."
-                    echo "    '--${OPTBANNER}' stems from \${${OPTBANNERIND} == '${!OPTBANNERIND}'."
+                    echo "    '--${OPTBANNER}' stems from \${${OPTBANNERIND}} == '${!OPTBANNERIND}'."
                     echo "    '${OPTVALUE}' stems from \${${OPTVALUEIND}} == ${!OPTVALUEIND}."
                   fi
                   echo 

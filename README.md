@@ -1,6 +1,6 @@
 # Processing Command-Line Arguments
 
-# Repository Objective
+## Repository Objective
 
 This repository has been created for the following purposes:
 
@@ -13,12 +13,63 @@ This repository has been created for the following purposes:
   3. to provide the alternative command-line utility, called {TBD}, that provides a more {insert adjective} utility
 
 
-# Command Line Discussion
+## Musing
+  See [MUSING.md](MUSING.md) to see my current thinking.
+
+---
+
+Below is a work-in-progress framing of the future README.md file
 
 
-# Utilities for Command-line Processing
+
+## Command Line Discussion
+
+
+## Utilities for Command-line Processing
 
   * getopts: a bash builtin utility
+    * Benefits:
+      - processing of condense options: e.g., -xdf file or -xdffile
+      - effectively canonicalizes the options for the program: -x -d -f file
+      - performs error checking and reporting
+    * Detriments
+      - you can't have options with optional arguments as does getopt
+      - does not easily support multi-character options, e.g., --banner
+      - the -f options are referenced in the code as "f"
+        - the --banner would be referenced in the code as -banner
+
+   * getopt: a gnu utility
+      - Benefits:
+        - leverages getopts for short options
+          - adds the ability to do optional arguments -- but such an argument MUST be connected to the option:  e.g. -dfile but not -d file
+        - add support for multi-character 
+        - multi-character options can have optional arguments
+          - but MUST also be connected to the option via an '='
+        - user code refers to the --banner or -flag in the program
+        - Long options may be abbreviated, as long as the abbreviation is not ambiguous.
+          - BUT what about backward compatibility if additional options are created
+
+      - Detriments
+        - attempt to "shuffle" the arguments
+          - hence command with subcommands don't work well
+            - getopt "C:a" git -C . commit -a
+        - even though handles multi-character options,
+          * program's code still must manage which have arguments or not
+            - (My getops with --banner support address this by the introduction of the OPTVALUE variable)
+
+       - Notes:
+         * supports alternative presentation of long options which begin with a single "-"
+         * Shuffling of args can be turned of... so says the docs
+           - does it, what value is there in shuffling
+           - +, - as the first character in the shortops, but with the correct usage
+             - getopts -o "+d::" -- params
+             ```
+             $ getopt -o "+xd::" --  -xd one done -xdtwo -dthree -d four -x arg1
+                -x -d '' -- 'one' 'done' '-xdtwo' '-dthree' '-d' 'four' '-x' 'arg1'
+             $ getopt "xd::"  -xd one done -xdtwo -dthree -d four -x arg1
+                -x -d  -x -d two -d three -d  -x -- one done four arg1
+             ```
+           - notice the extract of the first -d, no shuffle
 
 
   * getopt: a bash utility that standardize the presentation of command-line options
@@ -43,11 +94,12 @@ This repository has been created for the following purposes:
 
 
 
-## Description of the Command Line
+### Description of the Command Line
 
-### Components of the Command Line
+#### Components of the Command Line
 
-### Dictionary
+
+#### Dictionary
   1. word:
      - A sequence of characters considered as a single unit by the shell.  Also know as a token.
 
@@ -93,7 +145,7 @@ This repository has been created for the following purposes:
        * -{-name} [{value}]
        * -{-name}={value}
 
-# References
+## References
 
   * man page for getopts:
     - https://linuxcommandlibrary.com/man/getopts
@@ -105,3 +157,5 @@ This repository has been created for the following purposes:
    * man page for GNUs-getopt
 
    * https://stackabuse.com/how-to-parse-command-line-arguments-in-bash/
+
+   * https://kodekloud.com/blog/bash-getopts/

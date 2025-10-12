@@ -559,6 +559,52 @@ What is faster
    1. Why: Conjecture
       1. the -* form is older, and hence optimized
       1. the {V:d:l} has more variants, but we just want a special case.
-      
 
 
+--
+getopts does not handle ::, i.e., optional arg
+how does getopt handle it
+
+$ getopt "xd::"  -xd one -xdtwo -dthree -d four -x arg1 
+ -x -d  -x -d two -d three -d  -x -- one four arg1
+
+- the single option must have its value attached to it
+- the non-options that are not args are moved to the end
+  * this is bad because the following is now broken
+    ```
+    $ getopt "C:a" git -C . commit -a
+    -C . -a -- git commit
+    ```
+
+  for multicharater options, we have
+  ```
+  $ getopt -l "dir::" "" --dir hello
+   --dir '' -- 'hello'
+  $ getopt -l "dir::" "" --dir=hello
+   --dir 'hello' --
+  $ getopt -l "dir:" "" --dir=hello
+   --dir 'hello' --
+  $ getopt -l "dir:" "" --dir hello
+   --dir 'hello' --
+  ``` 
+  - if the argument is optional .. it MUST be connected
+    * so consistent is with getopt
+    * but not consistent with moving the args
+
+So, should we model..
+
+  - getopts with an optional arg, to be consistent with getopt
+  - OR argue that both are broken because the move the args at the end
+
+--
+can optional arguments start with a -
+
+From getopt(3)
+Option arguments are allowed to begin with “-”; this is reasonable but
+     reduces the amount of error checking possible.
+
+Check this out
+getopt:  
+       name, separated by '=', if present (if you add the '=' but nothing
+       behind it, it is interpreted as if no argument was present; this is a
+       slight bug, see the BUGS)
