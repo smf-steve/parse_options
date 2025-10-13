@@ -187,58 +187,13 @@ Notes are below (to be review and cleanup )
 
 
 # Notes
-  * The notes that are removed are due to an old implementation on my MAC.
-    ```
-     * define canonical  command line
-       - option_spec "abc"    : "-abc" is not transformed to "-a -b -c"
-       - option_spec "o:"     : "-oarg" is transformed to "-o arg"
-       - option_spec "ao:"    : "-o -a" is transformed to "-o \? -a"
-       - option_spec ":ao:"   : "-o -a" is transformed to "-o : -a"
-       - option_spec "ao::"   : "-o -a" is transformed to "-o -a"  --dif from mac
-       - long_spec   "hello:" : "--hello=value" --> --hello value
-     * getopt is called once, and returns a string
-     * getopts is call multiple times
-
-     * need to think about output quoting to preserve input
-     * possible updates
-       - double colon
-
-     * This is DUE to an old implementation of on my MAC.
-       If  the  first  character  is a '-', non-option parameters are outputted at the place
-          where they are found; in normal operation, they are all collected at the end of output after a '--' parameter has been generated.  Note
-          that this '--' parameter is still generated, but it will always be the last parameter in this mode.
-       - getopt should be collecting the non-option to the end; but this does not happen
-       - nor does the use of - or + at the beginning
-       - THIS IS AS IS ON MY MAC
-    ```
-
   * -l, --longoptions longopts
-              The long (multi-character) options to be recognized.  More than one option name  may  be  specified  at
-              once,  by  separating the names with commas.  This option may be given more than once, the longopts are
-              cumulative.  Each long option name in longopts may be followed by  one  colon  to  indicate  it  has  a
-              required argument, and by two colons to indicate it has an optional argument.
-   -  we could use this to indicate how to interpret the optstring rather than provideing tow input strings
-      * getopts "abd" "apple,bear,dog"
-      * getopts ---longopts "a,apple,b,bear,dog"  
-        - possible sort alphabetically? to do long matching?
+    - it is clear that getopt is an attempt to improve getopts
+      * while getopts .... ; do 
+      * args=$(getopt ....) ; 
+        for i in $args  ; do
 
-  * man https://linuxcommandlibrary.com/man/getopts
-    -  A leading colon `:` in `optstring` enables "silent error reporting", preventing `getopts` from printing error messages for unknown options or missing arguments; 
-  * https://linux.die.net/man/3/getopt
-    * Note this is a C lib
-    * Returns the option character.
-    -  An element of argv that starts with '-' (and is not exactly "-" or "--") is an option element. 
-    - getopt_long() and getopt_long_only()
-    -  The optreset variable was added to make it possible to call the getopt() function multiple times.
-    - getopt() permutes the contents of argv as it scans, 
-      - + as the first char in optstring denotes be aggressive with finding options
-      - - as the first char in optstring denotes stop upon first nooption
-      * But this creates a potential problem in commands with subcommands
-        - e.g., git -C path commit -m
-        - this would be transformed into git -C path commit
-      * quote: This is used by programs that were written to expect options and other argv-elements in any order and that care about the ordering of the two.)
-
-    - : denotes option has argument
+      - : denotes option has argument
     - :: denotes an optional argument
       - maybe only if -oarg as opposed to -o arg
       - issue -o arg non-option -->
@@ -252,34 +207,7 @@ Notes are below (to be review and cleanup )
     - Long option names may be abbreviated if the abbreviation is unique or is an exact match for some defined option. A long option may take a parameter, of the form --arg=param or --arg param.
 
 
-  * my BASH
-    - comma used to separate each option in optstring: not on mac bash
-      - acts an any other "character" for an option
-    - :: denotes that the argument is option in the considensed form
-      - appears that a sequence of ":" cancels out the first ":"
-      ```bash
-      # Optional
-      $ ans=$(getopt "a::b"  -aopt -b foo -b  hello this --b arg1 -x) ; echo $ans
-      -a opt -b -- foo -b hello this --b arg1 -x   # "opt" argument is repositioned
-
-      $ ans=$(getopt "a::b"  -a opt -b foo -b  hello this --b arg1 -x) ; echo $ans
-      -a -- opt -b foo -b hello this --b arg1 -x   # "opt" determined to be first non-option
-
-      $ ans=$(getopt "a::b"  -a -b foo -b  hello this --b arg1 -x) ; echo $ans
-      -a -b -- foo -b hello this --b arg1 -x       # missing arg correctly skipped
-
-      # Required
-      $ ans=$(getopt "a:b"  -aopt -b foo -b  hello this --b arg1 -x) ; echo $ans
-      -a opt -b -- foo -b hello this --b arg1 -x    # "opt" argument is repositioned
-
-      $ ans=$(getopt "a:b"  -a opt -b foo -b  hello this --b arg1 -x) ; echo $ans
-      -a opt -b -- foo -b hello this --b arg1 -x    # "opt" argument is detected
- 
-      $ ans=$(getopt "a:b"  -a -b foo -b  hello this --b arg1 -x) ; echo $ans
-      -a -b -- foo -b hello this --b arg1 -x        # missing required arg is NOT detected
-       ```
-
-    - ":option:" 
+    - What are the possible values for single options, ":option:" 
       - the initial : denotes silent mode, so no error is reported
         - illegal options are denoted as -- 
         ```bash
@@ -341,10 +269,6 @@ So new utility
   ++ would be special then
 
 --
-Found examples of 
-  --init-file file  
-as opposed to
-  --init-file=file
 
 with the = sign option no need to introduce a ":" if you will for long options
 without the = sign, you need to deal with the ambiguity of "file" being
