@@ -23,7 +23,7 @@ One might say, more ramblings as opposed to musing
          ( -l | --list )   # place the code here associated
                            # with the here "list" option
          ```
-     - the programmer's switch/case code fails into a recognized pattern
+     - the programmer's switch/case code falls into a recognized pattern
 
   1. {TBD}:
     I'm thinking of using compiler related approach to generate the code pattern for program.  This approach is based upon the tool "Lex/Flex". If you are familiar with Lex, perhaps the following musing give you some insight to what I'm thinking.
@@ -45,7 +45,6 @@ One might say, more ramblings as opposed to musing
 
     -h :                   {
                              # "h" option requires a value
-                             # said can be anything
                              # perhaps we should use "*" instead of :
                            }
 
@@ -119,6 +118,7 @@ One might say, more ramblings as opposed to musing
             ]
     ```
 
+    1. Should we add the ability to add a '+' for option identify
 
 
 # Next Steps/Work
@@ -187,26 +187,30 @@ Notes are below (to be review and cleanup )
 
 
 # Notes
-  * define canonical  command line
-    - option_spec "abc"    : "-abc" is not transformed to "-a -b -c"
-    - option_spec "o:"     : "-oarg" is transformed to "-o arg"
-    - option_spec "ao:"    : "-o -a" is transformed to "-o \? -a"
-    - option_spec ":ao:"   : "-o -a" is transformed to "-o : -a"
-    - option_spec "ao::"   : "-o -a" is transformed to "-o -a"  --dif from mac
-    - long_spec   "hello:" : "--hello=value" --> --hello value
-  * getopt is called once, and returns a string
-  * getopts is call multiple times
+  * The notes that are removed are due to an old implementation on my MAC.
+    ```
+     * define canonical  command line
+       - option_spec "abc"    : "-abc" is not transformed to "-a -b -c"
+       - option_spec "o:"     : "-oarg" is transformed to "-o arg"
+       - option_spec "ao:"    : "-o -a" is transformed to "-o \? -a"
+       - option_spec ":ao:"   : "-o -a" is transformed to "-o : -a"
+       - option_spec "ao::"   : "-o -a" is transformed to "-o -a"  --dif from mac
+       - long_spec   "hello:" : "--hello=value" --> --hello value
+     * getopt is called once, and returns a string
+     * getopts is call multiple times
 
-  * need to think about output quoting to preserve input
-  * possible updates
-    - double colon
+     * need to think about output quoting to preserve input
+     * possible updates
+       - double colon
 
-  * If  the  first  character  is a '-', non-option parameters are outputted at the place
-       where they are found; in normal operation, they are all collected at the end of output after a '--' parameter has been generated.  Note
-       that this '--' parameter is still generated, but it will always be the last parameter in this mode.
-    - getopt should be collecting the non-option to the end; but this does not happen
-    - nor does the use of - or + at the beginning
-    - THIS IS AS IS ON MY MAC
+     * This is DUE to an old implementation of on my MAC.
+       If  the  first  character  is a '-', non-option parameters are outputted at the place
+          where they are found; in normal operation, they are all collected at the end of output after a '--' parameter has been generated.  Note
+          that this '--' parameter is still generated, but it will always be the last parameter in this mode.
+       - getopt should be collecting the non-option to the end; but this does not happen
+       - nor does the use of - or + at the beginning
+       - THIS IS AS IS ON MY MAC
+    ```
 
   * -l, --longoptions longopts
               The long (multi-character) options to be recognized.  More than one option name  may  be  specified  at
@@ -409,50 +413,12 @@ To implement
   - does not lend itself to readability -- which is parament
 
 --
-Anser:  I don't think its worth it...
-
-Thoughts on a compiler compiler for options
-1. provide a list of options
-cat <<EOF
--a
--a option
---long
---long=arg
---longer=arg
-EOF
-2. generate a code template
-cat <<EOF
-while getops "a:" option ; do
-  case $option in
-     a ) 
-         if [[ -z $OPARG ]] ; then 
-            :
-         else
-             :
-         fi
-
-         ;;
-     
-    long )
-         if [[ -z $OPARG ]] ; then 
-            :
-         else
-             :
-         fi
-         ;;
-
-    longe* )
-         if [[ -z $OPARG ]] ; then 
-            :
-         else
-            :
-         fi
-         ;;
-
----
-Thoughts on ++
+* Current establish prefix for an option is
+  - -  short option, e.g., -f
+  - -- long option, e.g., --banner
+  - +  to have the opposite meaning of  -
   - nice to have +x   to turn things on/off
-  - but with --, you could have  -x on , -x off
+  - but with --, you could have  --x on , --x off
   - seems to be a throw back to the shell opts
 
 Thoughs on : versues ::  -- don't think there is much value on the optional due to potential ambiguity
@@ -524,44 +490,7 @@ getopts "a+-:" option -+ --blue color --red arg1 -x ; echo $option $OPTARG
 "" \?  OPTIND==5
 
 
-
-dwarf:parse_options steve$ /opt/homebrew/opt/gnu-getopt/bin/getopt --help
-
-
-
-Usage:
- getopt <optstring> <parameters>
- getopt [options] [--] <optstring> <parameters>
- getopt [options] -o|--options <optstring> [options] [--] <parameters>
-
-Parse command options.
-
-Options:
- -a, --alternative             allow long options starting with single -
- -l, --longoptions <longopts>  the long options to be recognized
- -n, --name <progname>         the name under which errors are reported
- -o, --options <optstring>     the short options to be recognized
- -q, --quiet                   disable error reporting by getopt(3)
- -Q, --quiet-output            no normal output
- -s, --shell <shell>           set quoting conventions to those of <shell>
- -T, --test                    test for getopt(1) version
- -u, --unquoted                do not quote the output
-
- -h, --help                    display this help
- -V, --version                 display version
-
-
---
-What is faster
-   [[ ${F:0:1} == '-' ]]
-   [[ $F       == -* ]]     <--  by timing the execution..  
-   
-   1. Why: Conjecture
-      1. the -* form is older, and hence optimized
-      1. the {V:d:l} has more variants, but we just want a special case.
-
-
---
+---
 getopts does not handle ::, i.e., optional arg
 how does getopt handle it
 
@@ -597,14 +526,18 @@ So, should we model..
   - OR argue that both are broken because the move the args at the end
 
 --
-can optional arguments start with a -
 
-From getopt(3)
-Option arguments are allowed to begin with “-”; this is reasonable but
-     reduces the amount of error checking possible.
 
-Check this out
-getopt:  
-       name, separated by '=', if present (if you add the '=' but nothing
-       behind it, it is interpreted as if no argument was present; this is a
-       slight bug, see the BUGS)
+# Details to validate and think about:
+  - can the value of an option begin with a -
+    * e.g.,   -l-help  or -l -help
+    * how do you escape the second form 
+      * 
+
+  - still an interpretation issue of 
+    - must have an argument -- ignore if the next token is a --
+    - may have an argument --  set '' if the next token is a --
+
+
+  - proper ways to assign a default value of '' to a  --banner option
+    is --banner=, --banner='', -banner ''
