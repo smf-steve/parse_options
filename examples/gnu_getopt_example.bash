@@ -1,0 +1,341 @@
+#! /usr/bin/env bash
+
+# These are not used
+alias getopts_lookahead_word='echo ${!OPTIND}'
+alias getopts_next_word='{ echo ${!OPTIND}((OPTIND ++)) }'
+
+
+# Need to determine what to do when
+#  --dir without an arg is given
+# currently we stop
+# should we continue, but if so, how do we reset
+#   - skip of --dir <--
+#   - skip of --tag
+
+# Need to work on  "d::"
+# ./fictitious -xf no -fhello -xfx   <<-- actual
+#  -f no   : is valid
+#  -fhello : is valid --> -f hello
+#  -xfx   : is valid --> -f x
+
+# If "d"
+# ./fictitious -xd no -dhell -xdx   <<- conjecture
+#  -xd no  -->  -d no    # same process as --dir 
+#  -dhell  -->  -d hell  # but getops will return just d
+#                        # need to play with ${OPTIND - 1}
+#                        # two assumptions:
+#                        #  1. h is an option, --> d has not option
+#                        #  1. h is not an option --> d has hell as the option
+#   -xdx                 #  this is the case above where h is an option
+#           
+
+# This file is designed as an example of implementing 
+# command-line options using getopts.
+
+# For descriptive purposes we use the following nomenclature utilizing `getopts`
+# 
+#   1. the syntax of an option:  
+#      *  -{flag}+ [value]
+#      *  --banner [value]
+#      *  --banner=value
+#
+#   1. the lexicon of an option include:
+#      *  flag:   [a-z0-9]  # a single ASCII character
+#      *  value:  a string of ASCII characters, a word in BASH parlance
+#      *  banner: a string of alpha-numeric characters
+#         
+#   1. Notes
+#      * a value can be quoted
+#      * a value should not start with a '-'  # due to how getopts operates
+#      * a banner can't not be quoted and needs to be a simple word
+
+
+function fictitious() {
+  # Usage: fictitious [options] [--] arg1 arg2
+  #
+  # Short Options: "xltif:d::"                   <-- Note technically wrong
+  #    - with no value:       -x, -l, -t, -i
+  #    - with required values: -f file
+  #    - with optional values: -d [N]
+  #
+  # Long Options (introduced by the short option of '-')
+  #   - with no value:         --ignore-case
+  #   - with required values:  --dir path, --dir=path
+  #   - with optional values:  --tag [pattern], --tag[=pattern]
+  #
+  # NOTE that getopts does not support either optional values or long options.
+  # HENCE special handling is required within getopts for these two cases
+
+
+  ## Step 1: Process Command line arguments using getopts
+  #
+  # Use getopts to support the processing of option and their values
+  # Usage:  optstring name [arg ...]
+  #    optstring: "xltif:d:-:"                <-- Note the difference from above
+  #      - note each short option is included in the string
+  #      - a single colon (:) denotes the proceeding character requires a value
+  #        - the option -f requires a value
+  #        - the option -- requires a value
+  #      - to support optional values, i.e., -d
+  #        - treat the option as if it does NOT have an argument
+  #        - then perform special handling if this assumption proves to be wrong
+  #      - to support long-options, 
+  #        - use - as an option with a required value
+  #        - then perform special handling for its values
+  #
+  #    name:      flag
+  #
+  #    [parameter ...]: "$@", which is equivalent to ${1}, ${2}, ... ${!#}
+  #
+
+  # Global variables associated with getopts
+  : ${OPTIND}    # The current index of the parameter being processed
+  : flag         # The character associated with the current option being processed
+  : ${OPTARG}    # The optional argument associated with current option being processed
+
+  # Additional variables to correspond with the nomenclature above
+  : ${OPTFLAG}
+  : ${OPTBANNER}
+  : ${OPTVALUE}
+
+
+
+# -->
+# ONLY UPDATE OPTIND if we are show we are moving to the next parameter
+
+# Everything seems to be work except try to figure where things stem from.
+
+
+  # Set the Position Parameters to the Current Positional Parameters
+  set -- "$@"    # This step is superfluous, but illustrative
+
+  OPTIND=1    # Rest the index associated with the getops utility
+  while getopts "xltif:d-:" flag ; do
+    local OPTFLAG=${flag}
+    local OPTBANNER=
+    local OPTVALUE=${OPTARG}
+
+    ## Determine if flag is last on the list
+    local stem=${!OPTIND}
+    local last=${stem: -1}
+
+    if [[ ${flag} == ${last} ]] ; then
+       OPTPOSITION=$(( OPTIND - 1 ))
+    else
+       OPTPOSITION=${OPTIND}
+    fi
+
+
+
+    case "${flag}" in
+
+      # These options do NOT have a value
+      ( x | l | t )
+           echo "The option '-${flag}' has been identified with no value."
+           local position=
+           echo "    '-${flag}' stems from \${${OPTIND}} == '${!OPTPOSITION}'."
+           # it can stem from either 
+           #     OPTIND     if it is NOT last in the list
+           #     OPTIND - 1 if it is the last in the list
+           echo
+           ;;
+
+      ( i )
+           echo "The option \`-${flag}\` has been identified with no value."
+           echo "    \`-${flag}' stems from \${$OPTPOSITION}} == '${!OPTPOSITION}'."
+           echo
+
+           # Insert code to turn on case insensitivity (see option "ignore-case" below)
+           ;;
+
+      # This option MUST have a value
+      ( f )
+           echo "The option \`-${flag}\` has been identified with the value '${OPTARG}'."
+           echo "    '-${flag}' could stem from either \${$((OPTPOSITION -1))} or \${${OPTPOSITION}}."
+           echo "    '${OPTARG}' stems from \${${OPTPOSITION}} == '${!OPTPOSITION}'."
+           echo 
+           ;;
+
+      ## This option MAY have a value
+
+      # Treat as if it is required to have a value
+      # "d:" and -dvalue  -->  "value" is $OPTARG"
+      #                        if v was intended to be the next option, no way to handle it
+      # "d:" and -d value -->  then "value" is the $OPTARG
+      # "d:" and -d -next -->  then $OPTARG needs to be put back, (( OPTIND -- ))
+
+      ## Treat as if doe NOT have a value  <<--
+      #  "d" and -dvalue  -->  if "v" is the next option -- I.e., no way to undo
+      #  "d" and -d value -->  "value" is ${!OPTIND}
+      #                        if value does not begin with -. (( OPTIND ++ ))
+
+
+      ## This option MAY have a value
+      ( d )
+ 
+           ## Check to see if the next word is valid argument
+
+
+          if [[ -z "${OPTARG}" ]] then
+            echo "The option '-${flag}' has been identified without a value."
+            echo "    '-${flag}' stems from \${${OPTPOSITION}} == '${!OPTPOSITION}'"
+          else
+            echo "The option '-${flag}' has been identified with the value '${OPTARG}'".
+            echo "    '-${flag}' stems from \${$((OPTPOSITION))} == '${!OPTPOSITION}'"
+            _arg_position=$((OPTPOSITION+1))
+            echo "    '${OPTARG}' stems from \${${_arg_position}} == '${!_arg_position}'."
+          fi
+          echo
+          ;;
+
+      ## Manage long-form options via the "--" option
+      ( - )
+          # NOTE BUG:  either of the following can be used 
+          #   --tag    // correct
+          #   - -tag   // buggy
+
+          [[ -z ${OPTARG} ]] && break        # Special case of "--"
+
+          # At this point:
+          #   flag   == -
+          #   OPTARG == -banner[=value]
+
+          OPTBANNER=${OPTARG/%=*/}           # strip off the option [=value]
+          OPTVALUE=${OPTARG/#*=/}            # strip off the option {banner}= 
+
+          [[ ${OPTVALUE} == ${OPTARG} ]]  && OPTVALUE=""
+
+          OPTBANNERIND=$((OPTIND - 1))
+          OPTVALUEIND=$((OPTIND - 1))
+
+          local _solo_value=false
+
+          case "${OPTBANNER}" in
+              ## This option does NOT have a value
+              ( ignore-case )
+                  echo "The option '--${OPTBANNER}' has been identified."
+                  echo "    '--${OPTBANNER}' stems from \${${OPTBANNERIND}}."
+
+                  # Insert User's Code Here
+                  #   e.g., turn case insensitivity (see option "i" above)
+                  ;;
+
+              ## This option MUST have a value
+              ( dir )
+
+                  # alternatively... if it is a MUST
+                  # always take the next value and if it starts with a -
+                  # Put it back
+
+                  { # The following code should be provided by the "system"
+                    if [[ -z "${OPTVALUE}" ]] ; then
+                      # Put the next non-option parameter into $OPTVALUE
+                      if [[ ${!OPTIND} != -* ]] ; then
+                        OPTVALUEIND=${OPTIND}
+                        OPTVALUE=${!OPTIND}
+                        ((OPTIND ++ ))
+                      fi
+                    fi
+                    if [[ -z "${OPTVALUE}" ]] ; then 
+                       echo ${0}: option requires an argument -- ${OPTBANNER} > /dev/stderr
+                       break ;  # What should happen in SILIENT MODE
+                    fi
+                  }
+
+                  echo "The option '--${OPTBANNER}' has been identified with the value '${OPTVALUE}'."
+                  echo "    '--${OPTBANNER}' stems from \${${OPTBANNERIND}} == '${!OPTBANNERIND}'."
+                  echo "    '${OPTVALUE}' stems from \${${OPTVALUEIND}} == ${!OPTVALUEIND}."
+                  echo 
+
+                  # Insert User's Code Here
+                  ;;
+
+
+              ## This option may have a value
+              ( tag )
+                 { # The following code should be provided by the "system"
+                    if [[ -z "${OPTVALUE}" ]] ; then
+                      # Put the next non-option parameter into $OPTVALUE
+                      if [[ ${!OPTIND} != -* ]] ; then
+                        OPTVALUEIND=${OPTIND}
+                        OPTVALUE=${!OPTIND}
+                        ((OPTIND ++ ))
+                      fi
+                    fi
+                  }
+
+
+                  if [[ -z "${OPTVALUE}" ]] ; then 
+                    echo "The option '--${OPTBANNER}' has been identified without a value."
+                    echo "    '--${OPTBANNER}' stems from \${${OPTBANNERIND}} == '${!OPTBANNERIND}'."
+                  else
+                    echo "The option '--${OPTBANNER}' has been identified with the value '${OPTVALUE}'."
+                    echo "    '--${OPTBANNER}' stems from \${${OPTBANNERIND}} == '${!OPTBANNERIND}'."
+                    echo "    '${OPTVALUE}' stems from \${${OPTVALUEIND}} == ${!OPTVALUEIND}."
+                  fi
+                  echo 
+
+                  # Insert User's Code Here
+                  ;;
+
+              ( * )
+                # Invalid option detected
+                echo ${0}: illegal option -- ${OPTBANNER} > /dev/stderr
+                ;;
+
+          esac
+          ;;
+
+      ( \? )
+          # Invalid option detected
+          continue  # We have processed all options  
+          ;;
+    esac
+  done
+  shift $(( OPTIND -1 ))
+
+  if [[ $# == 0 ]] ; then 
+    echo "There are no remaining arguments to fictitious."
+  else 
+    echo -n "The arguments to fictitious are: "
+    for i in "$@" ; do
+       echo -n \'$i\' 
+       echo -n ' '
+    done
+  fi
+  echo
+  # Step 2: Continue with the processing of `fictitious`
+
+  return
+}
+
+if [[ "$#" != 0 ]] ; then
+  fictitious "$@"
+else
+  #echo fictitious -d --tag -xffile --dir=/usr/bin  --dir /local/sbin -d arg1 arg2
+  echo 
+  echo fictitious --dir --dir=/usr/bin  --dir /local/sbin -d arg1 arg2
+  echo
+  fictitious --dir --dir=/usr/bin  --dir /local/sbin -d arg1 arg2
+  echo
+fi
+
+   # Programming Clarity:
+   #
+   # 1. It would be better if the option of -i and -ignore-case were together
+   # in the same switch class
+   # 
+   # 2. It would be better if a double switch case was not require
+   #
+   # 3. It would be better if there was way to "mark" long option as to their
+   #     argument type as is the case with short options
+
+#management of values for long form options must be managed by the programmer
+
+   # Exceptions:
+   #   * use of a single -
+   #     - must be a argument typical to denote stdin
+   #     - be not be the first argument, or it must follow "--"
+   #   * "--" be supported, and is trigger as "-::"
+
+   # -xd-tag is valid
