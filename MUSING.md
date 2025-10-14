@@ -4,13 +4,26 @@ This file contains my musing as a work throw what I want to accomplish in this r
 These should be consider akin notes that you take during a class lecture.
 One might say, more ramblings as opposed to musing
 
+# Next Steps/Work
+  1. muse some more
+  1. finish working on fictitious, an examplar for using getopts
+  1. validate parse_options works
+     - based upon musing of improving getopts
+     - appears to be comparable to getopt's functionality
+  1. create a version of fictitious, as an examplar for using getopt
+  1. create a version of parse_option using getopt
+  1. refine musing
+  1. create TDB specification for man git
+
+
+
 # Current Recap
   1. getopts:
      - nice utility to simplify the use of condensed options -lst, as opposed to -l -s -t
      - its a hack to use the tool to use long options, e.g., --long value
      - views the option's name as the string _after_ the first hyphen (-)
        * given: -s and --long, the names are s and -long, respectively
-     - the programmer's switch/case statement refers to these names, and special is need  for long options
+     - the programmer's switch/case statement refers to these names, and special code is need for long options
 
   1. getopt:
      - canonicalizes the presentation of options
@@ -25,7 +38,16 @@ One might say, more ramblings as opposed to musing
          ```
      - the programmer's switch/case code falls into a recognized pattern
 
-  1. {TBD}:
+     - creates pairs of arguments for options that may and must have a requirement
+       * '--option-require'  'value'  '--option-may' ''
+       * but doesn't do this for those that DON't have an arg.
+       * 'option-noarg'    '--option-require'  'value'  '--option-may' ''
+       * should be
+       * 'option-noarg' '' '--option-require'  'value'  '--option-may' ''
+
+
+  1. clo: command line options
+
     I'm thinking of using compiler related approach to generate the code pattern for program.  This approach is based upon the tool "Lex/Flex". If you are familiar with Lex, perhaps the following musing give you some insight to what I'm thinking.
 
     ```tbd
@@ -35,6 +57,7 @@ One might say, more ramblings as opposed to musing
     boolean="true false"
     number=[0-9]+
 
+
     %%
     # This section holds option specifications
 
@@ -43,9 +66,9 @@ One might say, more ramblings as opposed to musing
                              ;
                            }
 
-    -h :                   {
+    -h .*                  {
                              # "h" option requires a value
-                             # perhaps we should use "*" instead of :
+                             # you c an use either ":" or ".*"
                            }
 
     -d {boolean}           { 
@@ -97,7 +120,28 @@ One might say, more ramblings as opposed to musing
 
     ```
 
-    1. The use of ":" and "::" are used, maybe, to conform to the usage in getopts/getops
+- How should the build process work?
+
+      - .spec
+
+        -n {number}  { {trigger} } ==>
+
+      .def "-n" ""  { {support} ; OPTION_VALUE=${2} ; shift ; {trigger} ; }
+
+      .lex "-n  \*{number}"  { printf "-n", $2; }
+
+- how do I create a file to handle unambiguating 
+- rather than using lex, could we use awk?
+
+  --long-file name
+    * assume --long-f is prefix to unambiguous string
+
+       --long-f(i(l(e?)?)?)?) file
+
+
+
+
+    1. ":" and "::" are used, maybe, to conform to the usage in getopts/getops
     1. The use of ":" and "::" it might be a useless throwback
     1. each variable is considered a regular expression
        - a list can be separated by either a pipe (|) or a space
@@ -118,19 +162,26 @@ One might say, more ramblings as opposed to musing
             ]
     ```
 
-    1. Should we add the ability to add a '+' for option identify
+    1. Should we add the ability options start with a '+', so "+, -, --" start options
+
+    1. Format of the format file:    TRIGGER VALUE ACTION DOC
+       - TRIGGER includes the OPTION
+       - examples:
+         *  --file file {...} ```doc string ```
+           * TRIGGER="--file"
+           * OPTION="--file"
+           * VALUE=file
+           * ACTION="{...}"
+           * DOC="doc string"
+         *  (-f | --file) file {...} ```doc string ```
+           * TRIGGER="--file"
+           * OPTION=< either -f or --file >
+           * VALUE=file
+           * ACTION="{...}"
+           * DOC="doc string"
 
 
-# Next Steps/Work
-  1. muse some more
-  1. finish working on fictitious, an examplar for using getopts
-  1. validate parse_options works
-     - based upon musing of improving getopts
-     - appears to be comparable to getopt's functionality
-  1. create a version of fictitious, as an examplar for using getopt
-  1. create a version of parse_option using getopt
-  1. refine musing
-  1. create TDB specification for man git
+
 
 
 ---
@@ -142,8 +193,9 @@ Notes are below (to be review and cleanup )
   - OPTSTRING="xy"   | two options without values
   - OPTSTRING="x:y"  | option x with value and option y without a value
   - OPTSTRING="x:y:" | both x and you has values
-  - OPTSTRING=":x:y" | define the special char :, when an opt that is expected is missing
 
+  - OPTSTRING=":x:y" | define the special char :, when an opt that is expected is missing
+    
   - OPSTRING="x::"   | technically not supported, x has an option value
 
 
@@ -393,25 +445,6 @@ while getopts h489-: option ; do
   ```
   The last form keeps getops the same w.r.t. option
   adds the notion of the OPTNAME which excludes the - and --
-
-
-
-
-
-getopts "a+-:" option -+ --blue=color --red arg1 -x ; echo $option $OPTARG
-
--->
-+ ""
-- blue=color
-- red
-"" \?
-
-getopts "a+-:" option -+ --blue color --red arg1 -x ; echo $option $OPTARG
-+ ""
-- blue OPTIND==3
-"" \?  #color -- now increment OPTIND, OPTIND==4
-- red
-"" \?  OPTIND==5
 
 
 ---
