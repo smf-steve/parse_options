@@ -13,13 +13,13 @@ alias getopts_next_word='{ echo ${!OPTIND}((OPTIND ++)) }'
 #   - skip of --tag
 
 # Need to work on  "d::"
-# ./fictitious -xf no -fhell -xfx   <<-- actual
+# ./fictitious -xf no -fhello -xfx   <<-- actual
 #  -f no   : is valid
-#  -fhell : is valid --> -f hell
+#  -fhello : is valid --> -f hello
 #  -xfx   : is valid --> -f x
 
 # If "d"
-# ./fictitious -xd no -dhell -xdx   <<- conjectuire
+# ./fictitious -xd no -dhell -xdx   <<- conjecture
 #  -xd no  -->  -d no    # same process as --dir 
 #  -dhell  -->  -d hell  # but getops will return just d
 #                        # need to play with ${OPTIND - 1}
@@ -93,7 +93,7 @@ function fictitious() {
   : flag         # The character associated with the current option being processed
   : ${OPTARG}    # The optional argument associated with current option being processed
 
-  # Additonal variables to correspond with the nomenclature above
+  # Additional variables to correspond with the nomenclature above
   : ${OPTFLAG}
   : ${OPTBANNER}
   : ${OPTVALUE}
@@ -103,7 +103,7 @@ function fictitious() {
 # -->
 # ONLY UPDATE OPTIND if we are show we are moving to the next parameter
 
-# Everythign seems to be work except try to fingout where things stem from.
+# Everything seems to be work except try to figure where things stem from.
 
 
   # Set the Position Parameters to the Current Positional Parameters
@@ -189,7 +189,7 @@ function fictitious() {
           ;;
 
       ## Manage long-form options via the "--" option
-      ( - ) 
+      ( - )
           # NOTE BUG:  either of the following can be used 
           #   --tag    // correct
           #   - -tag   // buggy
@@ -212,7 +212,7 @@ function fictitious() {
 
           case "${OPTBANNER}" in
               ## This option does NOT have a value
-              ( ignore-case ) 
+              ( ignore-case )
                   echo "The option '--${OPTBANNER}' has been identified."
                   echo "    '--${OPTBANNER}' stems from \${${OPTBANNERIND}}."
 
@@ -221,7 +221,12 @@ function fictitious() {
                   ;;
 
               ## This option MUST have a value
-              ( dir )             
+              ( dir )
+
+                  # alternatively... if it is a MUST
+                  # always take the next value and if it starts with a -
+                  # Put it back
+
                   { # The following code should be provided by the "system"
                     if [[ -z "${OPTVALUE}" ]] ; then
                       # Put the next non-option parameter into $OPTVALUE
@@ -247,7 +252,7 @@ function fictitious() {
 
 
               ## This option may have a value
-              ( tag )  
+              ( tag )
                  { # The following code should be provided by the "system"
                     if [[ -z "${OPTVALUE}" ]] ; then
                       # Put the next non-option parameter into $OPTVALUE
