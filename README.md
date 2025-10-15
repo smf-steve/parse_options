@@ -38,6 +38,7 @@ Below is a work-in-progress framing of the future README.md file
       - the -f options are referenced in the code as "f"
         - the --banner would be referenced in the code as -banner
 
+
    * getopt: a gnu utility
       - Benefits:
         - leverages getopts for short options
@@ -159,3 +160,6 @@ Below is a work-in-progress framing of the future README.md file
    * https://stackabuse.com/how-to-parse-command-line-arguments-in-bash/
 
    * https://kodekloud.com/blog/bash-getopts/
+
+   * https://www.gnu.org/software/gawk/manual/gawk.html#Processing-Command_002dLine-Options
+   10.4 Processing Command-Line Options

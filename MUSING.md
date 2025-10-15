@@ -7,14 +7,12 @@ One might say, more ramblings as opposed to musing
 # Next Steps/Work
   1. muse some more
   1. finish working on fictitious, an examplar for using getopts
-  1. validate parse_options works
-     - based upon musing of improving getopts
-     - appears to be comparable to getopt's functionality
   1. create a version of fictitious, as an examplar for using getopt
-  1. create a version of parse_option using getopt
-  1. refine musing
+  1. reframe parse_option to be self_example.bash
+     - use lessons learns to couch the program similar to the use of getopts/getopt
   1. create TDB specification for man git
-
+  -
+  1. Of course continually cleanup and document
 
 
 # Current Recap
@@ -446,55 +444,76 @@ while getopts h489-: option ; do
   The last form keeps getops the same w.r.t. option
   adds the notion of the OPTNAME which excludes the - and --
 
-
----
-getopts does not handle ::, i.e., optional arg
-how does getopt handle it
-
-$ getopt "xd::"  -xd one -xdtwo -dthree -d four -x arg1 
- -x -d  -x -d two -d three -d  -x -- one four arg1
-
-- the single option must have its value attached to it
-- the non-options that are not args are moved to the end
-  * this is bad because the following is now broken
-    ```
-    $ getopt "C:a" git -C . commit -a
-    -C . -a -- git commit
-    ```
-
-  for multicharater options, we have
-  ```
-  $ getopt -l "dir::" "" --dir hello
-   --dir '' -- 'hello'
-  $ getopt -l "dir::" "" --dir=hello
-   --dir 'hello' --
-  $ getopt -l "dir:" "" --dir=hello
-   --dir 'hello' --
-  $ getopt -l "dir:" "" --dir hello
-   --dir 'hello' --
-  ``` 
-  - if the argument is optional .. it MUST be connected
-    * so consistent is with getopt
-    * but not consistent with moving the args
-
-So, should we model..
-
-  - getopts with an optional arg, to be consistent with getopt
-  - OR argue that both are broken because the move the args at the end
-
 --
 
+# Noted Issues:
 
-# Details to validate and think about:
-  - can the value of an option begin with a -
-    * e.g.,   -l-help  or -l -help
-    * how do you escape the second form 
-      * 
+  1. Optional Issues
+     - getopts does not provide said support
+     - getopt: optional values must be physically connected to the option
+       ```
+       $ getopt -l "dir::" "d::" --dir=hello -dhello  arg
+       --dir 'hello' -d 'hello' -- 'arg'
+       $ getopt -l "dir::" "d::" --dir hello  arg
+       --dir '' -- 'hello' 'arg'
+       $ getopt -l "dir::" "d::" -d hello  arg
+       -d '' -- 'hello' 'arg'
+       ```
+      - revised program can either
+        1. require optional args are physically connected (to be consistent with the past)
+        1. remove this requirement in favor of defining the form of a value
+           - i.e., a value is a parameter that does not start with a hyphen <---
 
-  - still an interpretation issue of 
-    - must have an argument -- ignore if the next token is a --
-    - may have an argument --  set '' if the next token is a --
 
 
-  - proper ways to assign a default value of '' to a  --banner option
-    is --banner=, --banner='', -banner ''
+
+  1. Support for Subcommands
+     * getopt is not good for use of programs with subcommands
+       - E.g., 
+       ```
+        $ getopt "C:a" git -C . commit -a
+        -C . -a -- git commit
+        ```
+     * Note the '-a' option for commit has become an option for `git`
+
+
+# Thoughts:
+
+  1. Can the value of an option betin with a '-'?
+     * Consider -l being an option that requires a value
+     * Are the following valid:  -l-help or -l -help
+     * Answer: No, define a value to NOT begin with a prefix
+     * But: Consider a way to escape the initial "-"
+
+  1. Interpretation issue associated with require values
+     - If the next command-line parameter begins with an "-"
+       1. so what -- use it, it is required
+       1. don't use it -- throw an error
+       1. don't use it -- use a default value
+          - this last option implies you should use an optional value
+     - getopts does:
+     - getopt does:
+
+
+  1. Interpretation issues associated with optional values
+     - It should be greedy in approach
+     - Use the next command-line parameter as its value
+     - Exception if said value begins with a hyphen
+       - Use the defined default (see below)
+     - getopt does:
+
+
+  1. Can we programmatically define a default value for an option?
+     - That is to say, if if the option is present, but not value is given, the specification that is provided via, say getopt, defines the value.
+     - Current proper ways to assign a default value of '' to a long-form option
+       * --{banner}=, --{banner}='', --{banner} ''
+     - Example:
+       - Let's say that we have option --debug to define the level of debugging
+         | CLI Includes | Level |
+         |--------------|-------|
+         | \<none\>     |   0   |
+         | --debug      |   1   |
+         | --debug N    |   N   |
+         | --debug=''   |   ''  |
+
+
