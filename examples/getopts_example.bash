@@ -336,6 +336,8 @@ function fictitious() {
     done
   fi
   echo
+
+  
   # Step 2: Continue with the processing of `fictitious`
 
   return
@@ -353,17 +355,31 @@ else
   echo
 fi
 
-   # Programming Clarity:
-   #
-   # 1. It would be better if the option of -i and -ignore-case were together
-   # in the same switch class
-   # 
-   # 2. It would be better if a double switch case was not require
-   #
-   # 3. It would be better if there was way to "mark" long-form option as to their
-   #     argument type as is the case with short-form options
 
-#management of values for long form options must be managed by the programmer
+# Lessons Learned:
+#
+#   Programming Clarity:
+#
+#     1. It would be better if the option of -i and -ignore-case were together
+#        in the same switch case
+#     
+#     2. Management of values for long form options must be managed by the programmer.
+#        It would be better if a double switch case was not require
+#  
+#     3. It would be better if there was way to "mark" long-form option as to their
+#        argument type as is the case with short-form options
+#        (Note this is provided by getopt)
+#
+#     4. Although all can be done using getopts, a much cleaner approach would
+#        be better.
+#
+#     5. Terminology is muddle with using getopts with long dash forms
+#        The implementation here hints at how to frame within a "better" utility
+#
+
+
+
+
 
    # Exceptions:
    #   * use of a single -
