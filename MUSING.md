@@ -23,6 +23,115 @@ One might say, more ramblings as opposed to musing
        * given: -s and --long, the names are s and -long, respectively
      - the programmer's switch/case statement refers to these names, and special code is need for long options
 
+
+     // ## getopts optstring flag [args]
+     // ### optstring notes:
+     // 
+     //   - OPTSTRING="xy"   | two options without values
+     //   - OPTSTRING="x:y"  | option x with value and option y without a value
+     //   - OPTSTRING="x:y:" | both x and you has values
+     // 
+     //   - OPTSTRING=":x:y" | define the special char :, when an opt that is expected is missing
+     //     
+     //   - OPSTRING="x::"   | technically not supported, x has an option value
+     // 
+     // 
+     // ### flag
+     //    - one of the characters in OPTSTRING
+     //    - : the special char to denote a option that requires a value does not
+     //      * OPTARG contains the incomplete option
+     //    - ? the special char to denote we say an invalid option, 
+     //      * OPTARG contains the invalid option
+     //    - + | - 
+
+   - getup as a hack can do the same thing as getopt, but...
+
+   - it is clear that getopt is an attempt to improve getopts
+      * while getopts .... ; do 
+      * args=$(getopt ....) ; 
+        for i in $args  ; do
+
+
+  1. Different programming approaches when using getopts
+     1. Hypen "-" used to introduce long-form options, with Programmer parsing the "="
+        ```bash
+      
+        : "set -- $args"
+        while getopts -: option ; do
+          case "${option}" in
+            ( - ) case "${OPTARG}" in
+                    ( init_file=* ) 
+                      : programmer separates the argument
+                      ARG=${OPTARG#init_file=}
+                    ;;
+                    ( init_file ) 
+                      ARG=${!OPTIND} ; (( OPTIND++ ))
+                    : ;;
+                  esac
+                  ;;
+        ```
+     1. With the splitting up an option base based upon an = 
+        ```bash
+         while getopts h489-: option ; do
+           # case "${}option}${OPTARE}"     
+           case "${option}" in
+             ( -half ) : OPTARG="";;
+             ( -some ) : OPTARG="value";;
+             ( h )  roman_form_half_set FALSE   ;;
+             ( 4 )  RN_SUBTRACTIVE_FORM_4=FALSE ;;
+             ( 8 )  RN_SUBTRACTIVE_FORM_8=TRUE  ;;
+             ( 9 )  RN_SUBTRACTIVE_FORM_9=FALSE ;;
+           esac
+       ``` 
+     1. Introducing OPTNAME not including the - or --
+        ```bash
+        while getopts h489-: option ; do
+          case "${OPTNAME}" in
+            ( half ) : OPTARG="";;                # option == -
+            ( some ) : OPTARG="value";;           # option == -
+            ( h )  roman_form_half_set FALSE   ;; # option == h
+            ( 4 )  RN_SUBTRACTIVE_FORM_4=FALSE ;; # option == 4
+            ( 8 )  RN_SUBTRACTIVE_FORM_8=TRUE  ;; # option == 8
+            ( 9 )  RN_SUBTRACTIVE_FORM_9=FALSE ;; # option == 9
+          esac
+        ```
+
+     1. Introduction of OPTNAME that includes the OPTPREFIX, this seems more better
+        ```bash
+        while getopts h489-: option ; do
+          case "${OPTNAME}" in
+            ( --half ) : OPTARG="";;               # option == -
+            ( --some ) : OPTARG="value";;          # option == -
+            ( -h )  roman_form_half_set FALSE   ;; # option == h
+            ( -4 )  RN_SUBTRACTIVE_FORM_4=FALSE ;; # option == 4
+            ( -8 )  RN_SUBTRACTIVE_FORM_8=TRUE  ;; # option == 8
+            ( -9 )  RN_SUBTRACTIVE_FORM_9=FALSE ;; # option == 9
+          esac
+        ```
+
+
+
+
+
+   1. gnu getopt OPTSTRING notes
+      - f:  denotes f has an associated value, -f value
+      - f:: denotes f may have an associated value,  -f, -fvalue
+      - initial character:
+        * ":" : getopt returns ':' instead of '?'
+        * "+" : scan stops after the first non-optional character
+        * "-" : non-option parameter are outputted where they are found
+        ```bash
+        $ getopt -o "-C:a" -- -C . commit -a
+        -C -C '.' 'commit' -a --
+        $ getopt -o "+C:a" -- -C . commit -a
+        -C '.' -- 'commit' '-a'
+
+        ```
+   1. getopt OPTSTRING
+      - initial character:
+        * ":" denotes silent mode
+
+
   1. getopt:
      - canonicalizes the presentation of options
      - leverage the getopts approach for support of condensed options
@@ -44,11 +153,38 @@ One might say, more ramblings as opposed to musing
        * 'option-noarg' '' '--option-require'  'value'  '--option-may' ''
 
 
+        // - getopt: a bash utility that standardize the presentation of command-line options
+       //    * Definition of an option
+       //      - a word that is proceed by a hypen (-), and is not exactly '-' or '--'
+       //        * such a word may contain more than one option
+       //        * such a word may have a suffix which is the argument to the last option
+       //        * a valid option is denoted by being included within the optstring
+       //        * a valid option is determined to have an argument if it is followed by a colon       // (:) within the optstring
+       //    * getopt Usage:         getopt "optstring" {args}
+       //    * Sample Command Line:  "command -a -o value -b arg1 -x"
+       //    * Example Usage: 
+       //      ```bash
+       //      args=$(getopt "abo:c" -acovalue -b arg1 -x)
+       //      returnval=$?
+       //      set -- "$args"
+       //      for i in $args ; do 
+       //      ```
+       //    * Process:
+       //      - scans the command line until it finds the first non-option argument
+       //      - validates that each option is valid
+       //      - separates a string of options into single options
+       //        * e.g., "-abc" --> "-a -b -c"
+       //      - separates an option from its argument
+       //         * e.g., "-otest" -> -o test
+       //      - inserts "--" place after the _first_ non-option identified
+       //    * Example Result:       ans == -a -c -o value -b -- arg1 -x
+
+
   1. clo: command line options
 
     I'm thinking of using compiler related approach to generate the code pattern for program.  This approach is based upon the tool "Lex/Flex". If you are familiar with Lex, perhaps the following musing give you some insight to what I'm thinking.
 
-    ```tbd
+    ```lex
     # This section holds variable definitions
     style="early modern apostrophus vinculum"
 
@@ -183,272 +319,49 @@ One might say, more ramblings as opposed to musing
 
 
 ---
-Notes are below (to be review and cleanup )
-
-## getopts optstring flag [args]
-### optstring notes:
-
-  - OPTSTRING="xy"   | two options without values
-  - OPTSTRING="x:y"  | option x with value and option y without a value
-  - OPTSTRING="x:y:" | both x and you has values
-
-  - OPTSTRING=":x:y" | define the special char :, when an opt that is expected is missing
-    
-  - OPSTRING="x::"   | technically not supported, x has an option value
-
-
-### flag
-   - one of the characters in OPTSTRING
-   - : the special char to denote a option that requires a value does not
-     * OPTARG contains the incomplete option
-   - ? the special char to denote we say an invalid option, 
-     * OPTARG contains the invalid option
-   - + | - 
-
-
-# A bash script to extend 'getopts'
-
-
-
-# Similar Utilities
-  - getopt: a bash utility that standardize the presentation of command-line options
-    * Definition of an option
-      - a word that is proceed by a hypen (-), and is not exactly '-' or '--'
-        * such a word may contain more than one option
-        * such a word may have a suffix which is the argument to the last option
-        * a valid option is denoted by being included within the optstring
-        * a valid option is determined to have an argument if it is followed by a colon (:) within the optstring
-    * getopt Usage:         getopt "optstring" {args}
-    * Sample Command Line:  "command -a -o value -b arg1 -x"
-    * Example Usage:        ans=$(getopt "abo:c" -acovalue -b arg1 -x)
-    * Process:
-      - scans the command line until it finds the first non-option argument
-      - validates that each option is valid
-      - separates a string of options into single options
-        * e.g., "-abc" --> "-a -b -c"
-      - separates an option from its argument
-         * e.g., "-otest" -> -o test
-      - inserts "--" place after the _first_ non-option identified
-    * Example Result:       ans == -a -c -o value -b -- arg1 -x
-
-  - getopt: a bash builtin utility
-
-# References
-
 
 # Notes
-  * -l, --longoptions longopts
-    - it is clear that getopt is an attempt to improve getopts
-      * while getopts .... ; do 
-      * args=$(getopt ....) ; 
-        for i in $args  ; do
 
-      - : denotes option has argument
-    - :: denotes an optional argument
-      - maybe only if -oarg as opposed to -o arg
-      - issue -o arg non-option -->
-        * -o -- arg non-option
-        - -o arg -- non-option
-      - quote: If the first character (following any optional '+' or '-' described above) of optstring is a colon (':'), then getopt() returns ':' instead of '?' to indicate a missing option argument
+  1. New utility
+     1. No
+        - Still not clear if a new utility is worth the benefits
+        - It could be that
+          * some standardized approaches to using getopt,
+          * with a twist of thinking, and 
+          * a standardize switch structure, processing two parameters at a time
+        - would yield more readable code
+     1. Yes
+        - cleans up the "hack" used via the -- from the getopts approach
+        - provides more unified environment names: OPT_PREFIX, OPT_VALUE, etc
+        - treats "--" and "-" stdin more unifying
 
-    - ; is a GNU extension
-      - "W;"  -W foo -->  --foo
-
-    - Long option names may be abbreviated if the abbreviation is unique or is an exact match for some defined option. A long option may take a parameter, of the form --arg=param or --arg param.
-
-
-    - What are the possible values for single options, ":option:" 
-      - the initial : denotes silent mode, so no error is reported
-        - illegal options are denoted as -- 
-        ```bash
-        ans=$(getopt ":a+-" -+ --bluecolor --red arg1 -x) ; echo $ans
-        -+ -- -- -- arg1 -x
-        # -+: valid, --bluecolor invalid, --red invalid, -- end of optioins
-        ```
-      - the initial : allows a -: option but it is removed
-        ```bash
-        ans=$(getopt ":ab"  -a -:b -b  hello this --b arg1 -x) ; echo $ans
-        -a -b -b -- hello this --b arg1 -x
-        $ ans=$(getopt "ab"  -a -:b -b  hello this --b arg1 -x)
-        getopt: illegal option -- :
-        ```
-      - the option 'n' has an associated argument
-    
-    - "-:" is recognized as a option with an argument
-        ```bash
-        $ ans=$(getopt "-:" --blue --red arg1 -x)
-        $ echo $ans
-        -- blue -- red -- arg1 -x
-       ```
-      * note the space between -- and the value, this is just the canonical form
-      * but now we don't know the start of the args proper
+  1. The nomenclature for various things is both getopts and getopt is
+     - not uniform
+     - a bit muddle (especially when using getopts to mimic getopt)
+     - the new tool use standardize these names in a more effective way
+     - NOTE: much of the new nomenclature is being used as this repo is being fleshed out
+     - Given:  
+        | option        | -f value | --banner=value | 
+        |---------------|----------|----------------|
+        | name          | -f       | --banner       |
+        | value         | value    | value          |
+        | OPTPREFIX=    | -        | --             |
+        | OPTNAME=      | -f       | --banner       | * Used in the code by the user
+        | OPTVALUE=     | value    | value          | 
 
 
-HMM...
-  - getopt canonicalizes the string to ensure every option is a single letter, and
-    its optional argument is a separate word
+  1. Selection of long-form options in getopt
+     - user can enter an abbreviated name for a long-form option
+     - based upon specification of all options, disambiguation can occur
+     - such pre-processing can easily support alternative long-form
+       - alternative long-form are options that start with a single -
+     - downside could be in a user program that calls the utility when
+       - used a shorten long-form option
+       - the utility adds an option that introduces ambiguity 
+       - hence this is a support is
+       - but maybe, it is what it is, so use !   <---
 
-  - getopts expects the "-" option (with a specification of '-:') to NOT be canonicalized
-
-  - would it be better for getopt/getopts/etc use the '=' to separate the OPTNAME and OPTARG
-    - e.g.,          --name=arg  -->  OPTNAME=name     OPTARG=arg
-      * treats -- as it would treat -
-    - as opposed to  --name=arg  -->  OPTNAME=-        OPTARG=name=arg
-       * treats -- as the option flag followed by the "-" option  as treated by getop
-    - or as to       --name=arg  -->  OPTNAME=-name    OPTARG=arg
-       * treats the = sign special, which then would be treated by getopts as
-         -           -name=arg   -->  -n ame=arg, with OPTNAME=n OPTARG=( ame arg)
-
-I think, in short, there is not a huge benefit to providing a separate utility
-  - you can use the current getopts function but
-    - with a small twisted interpretation of what you are doing
-    - with the need of the user to do a secondary operation to split the ARG from the name
-      * i.e., the "option" is composed 
-
-So new utility
-  - cleans up the "hack" used via the --
-    - but how to identify it in the opt string, perhaps it is just the double of OPTIFS
-  - continues to treat -- as a special marker to split options from args
-  - adds the notion of: OPTPREFIX :  -, +, and --
-    - should -- be valid OPTPREFIX, if so a special case
-  - adds the notion of: OPTNAME
-  - retains the notion of "option", the first character after the OPTPREFIX -- what about --
-  IFS_PREFIX, OPTIFS
-    -OPTIFS=-+
-
-  ++ would be special then
-
---
-
-with the = sign option no need to introduce a ":" if you will for long options
-without the = sign, you need to deal with the ambiguity of "file" being
-  - an optional argument to --init-file
-  - the first argument
-
-  -- you could leave it up to the programmer, to "skip" over the option
-
-  ```bash
-
-  : "set -- $args"
-  while getopts -: option ; do
-    case "${option}" in
-      ( - ) case "${OPTARG}" in
-              ( init_file=* ) 
-                : programmer separates the argument
-                ARG=${OPTARG#init_file=}
-              ;;
-              ( init_file ) 
-                ARG=${!OPTIND} ; (( OPTIND++ ))
-              : ;;
-            esac
-            ;;
-    # but I can't do this with the current version of getopts
-    # i.e., manipulate OPTIND, or obtain the arg
-    # -- or can I  YES you CAN  -- B U T not with the condense short options
-    # $ set -- -bac arg
-    # $ getopts "abc" option  ; echo $option : $OPTARG : $OPTIND
-    # b : : 1
-    # dwarf:parse_options steve$ getopts "abc" option  ; echo $option : $OPTARG : $OPTIND
-    # a : : 1
-    # dwarf:parse_options steve$ getopts "abc" option  ; echo $option : $OPTARG : $OPTIND
-    # c : : 2
-    # $ echo ${1}
-    # -bac
-
-
-
-  ```
-  so really we are saying the : is really  to deal with
-    - the presense of multi, condense options:
-      -  "abc"  : -abc ->  -a -b -c
-      -  "a:bc" : -abc ->  -a bc
-  this is NOT needed with long arguments
-
-  so then getopts is really
-    - expending condense options to a cononical form
-    - defining an ARG  for a single char option
-    - but we can define the ARG for the user for long options, 
-      - unless we have a marker, i.e., =
-      - or the user handles it
----
-
-# 
-Thoughts on arguments with shorten input
-
-valid long option   "something someone test"
-then:
-   * --some is an error
-   * --somet expands to something
-   * --someo expands to someone
-
-To implement
-  - we need a list of valid long options and we need to pre process
-  - could cause backward comp if a new option is added
-  - does not lend itself to readability -- which is parament
-
---
-* Current establish prefix for an option is
-  - -  short option, e.g., -f
-  - -- long option, e.g., --banner
-  - +  to have the opposite meaning of  -
-  - nice to have +x   to turn things on/off
-  - but with --, you could have  --x on , --x off
-  - seems to be a throw back to the shell opts
-
-Thoughs on : versues ::  -- don't think there is much value on the optional due to potential ambiguity
-
--- is an - followed by the option -, hence
-  -- arg should be valid but the ambiguity
-
-for example
-```bash
-# AS IT IS
-while getopts h489-: option ; do
-    case "${option}" in
-      ( - ) case "${OPTARG}" in
-              ( half ) : ;;
-              ( some=value  ) : ;;
-            esac
-            ;;
-      ( h )  roman_form_half_set FALSE   ;;
-      ( 4 )  RN_SUBTRACTIVE_FORM_4=FALSE ;;
-      ( 8 )  RN_SUBTRACTIVE_FORM_8=TRUE  ;;
-      ( 9 )  RN_SUBTRACTIVE_FORM_9=FALSE ;;
-    esac
-
-# With the splitting based upon the = in the special case of --
-# with revising the value of "option"
-while getopts h489-: option ; do
-    case "${option}" in
-      ( -half ) : OPTARG=="";;
-      ( -some ) : OPTARG=="value";;
-      ( h )  roman_form_half_set FALSE   ;;
-      ( 4 )  RN_SUBTRACTIVE_FORM_4=FALSE ;;
-      ( 8 )  RN_SUBTRACTIVE_FORM_8=TRUE  ;;
-      ( 9 )  RN_SUBTRACTIVE_FORM_9=FALSE ;;
-     esac
-
-# With introducing OPTNAME that is defined as the prefix to the original OPTARG
-# with the value of "option" staying the same -- i.e., backward compatible, but not for OPTARG 
-while getopts h489-: option ; do
-    case "${OPTNAME}" in
-      ( half ) : OPTARG=="";;               # option == -
-      ( some ) : OPTARG=="value";;          # option == -
-      ( h )  roman_form_half_set FALSE   ;; # option == h
-      ( 4 )  RN_SUBTRACTIVE_FORM_4=FALSE ;; # option == 4
-      ( 8 )  RN_SUBTRACTIVE_FORM_8=TRUE  ;; # option == 8
-      ( 9 )  RN_SUBTRACTIVE_FORM_9=FALSE ;; # option == 9
-     esac
-
-  ```
-  The last form keeps getops the same w.r.t. option
-  adds the notion of the OPTNAME which excludes the - and --
-
---
-
-# Noted Issues:
-
-  1. Optional Issues
+  1. Optional Values
      - getopts does not provide said support
      - getopt: optional values must be physically connected to the option
        ```
@@ -464,8 +377,26 @@ while getopts h489-: option ; do
         1. remove this requirement in favor of defining the form of a value
            - i.e., a value is a parameter that does not start with a hyphen <---
 
+      - providing support for default values adds value to optional values
 
 
+  1. OPT_PREFIX="-,--"
+     - we should define what an option PREFIX is to generalize
+       - short-form option, e.g., -f
+       - long-form option, e.g., --banner
+
+  1. Standalone prefixes
+     - "--" should be interpreted special
+     - "-" should be interpreted special
+     - That is to say these are both arguments (and not options)
+       * "--" is the null (lambda) argument
+       * "-" can be used to denote stdin (as in `man cat`)
+
+  1. Plus (+) as an option PREFIX
+     - alternative short-form, e.g., +x
+     - has the opposite meaning of -x
+     - could be modeled as:  --x on,  --x off
+     - the +x could be just a throw back to the shell
 
   1. Support for Subcommands
      * getopt is not good for use of programs with subcommands
