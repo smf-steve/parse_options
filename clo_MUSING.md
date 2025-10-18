@@ -6,6 +6,32 @@ process of command-line options (CLO).
 
 I'm thinking of using a compiler related approach to generate the code pattern for a program.  This approach is based upon the tool "Lex/Flex". If you are familiar with Lex, perhaps the following musing give you some insight to what I'm thinking.
 
+## Refined Definitions related to options
+   - Option: must start with either "-", "--", "+"
+   - Short-Form Option:
+     * may not contain -, :, ;, \?
+   - Condensed Option List:
+     - must start with a "-"
+     - an number of options with NO arguments my be present
+     - only one option that requires or may have a value can be present
+       - said option MUST be the last in the condensed list
+    - Value
+      - must NOT start with a "-"
+      - can be escaped with \-
+      - given shell quote the value can be presented as
+        * \\-
+        * '\-'
+        * "\-"
+      - the escape is removed during the processing of the command line
+    - long options may start with a single '-'. (when -a, --alternative)
+    
+    - long form options are preferred.
+      - getopt -o "dir" --longoptions "dir" -a -- -dir
+        --> --dir, and not -d -i -r
+    - give a longform and short form that match, prefer the short form
+      - getopt -o "dir" --longoptions "dir" -a --  -d
+        -->   -d --
+
 
 1. Lex-Based skeleton specification   
 

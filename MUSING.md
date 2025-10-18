@@ -1,8 +1,12 @@
 # MUSINGS
 
-This file contains my musing as a work throw what I want to accomplish in this repo.
-These should be consider akin notes that you take during a class lecture.
-One might say, more ramblings as opposed to musing
+This file contains my musing and my notes as I think through what I want 
+to accomplish in this repo.  Some parts of this file should be consider more
+akin to notes taken during a class lecture as to opposed to well structured thoughts.
+
+Over time, these musing should be transformed more into use notes.
+
+As of 
 
 # Next Steps/Work
   1. muse some more
@@ -109,10 +113,6 @@ One might say, more ramblings as opposed to musing
           esac
         ```
 
-
-
-
-
    1. gnu getopt OPTSTRING notes
       - f:  denotes f has an associated value, -f value
       - f:: denotes f may have an associated value,  -f, -fvalue
@@ -182,141 +182,7 @@ One might say, more ramblings as opposed to musing
 
   1. clo: command line options
 
-    I'm thinking of using compiler related approach to generate the code pattern for program.  This approach is based upon the tool "Lex/Flex". If you are familiar with Lex, perhaps the following musing give you some insight to what I'm thinking.
-
-    ```lex
-    # This section holds variable definitions
-    style="early modern apostrophus vinculum"
-
-    boolean="true false"
-    number=[0-9]+
-
-
-    %%
-    # This section holds option specifications
-
-    -l | --list            { # insert code for the list option
-                             # "list" option has no arguments
-                             ;
-                           }
-
-    -h .*                  {
-                             # "h" option requires a value
-                             # you c an use either ":" or ".*"
-                           }
-
-    -d {boolean}           { 
-                             # "d" option requires an argument
-                             ;
-                           }
-
-  
-    -n {number}            { 
-                             # "n" option requires a number
-                             ;
-                           }
-
-    --{style}              { 
-                             # create an option for each value of ${style}
-                             # i.e., early, modern, apostrophus, and vinculum 
-                             # use the same code to support the option
-                             ;
-                           }
-
-    # Options that have an optional value
-
-    --debug     ::         {
-                             # "debug" option has an optional value
-                             # the default value is ""
-                             #   --i.e., no default value is provide
-                           }
-
-
-
-
-    --highlight :true {boolean}
-                           {
-                            # highlight has a optional value.
-                            # if NOT provided the default is "true"
-                            # if provided it must be either "true" or "false"
-                            ;
-                           }
-
-    # Now for a more complex example
-
-    -{style:0:1}     |     # use the first letter in each style to create an option
-    --{style}        |
-    --style {style}        { 
-                             # insert code the style option
-                             # this option can be expressed in a number of ways
-                             ;
-                            }
-
-    ```
-
-- How should the build process work?
-
-      - .spec
-
-        -n {number}  { {trigger} } ==>
-
-      .def "-n" ""  { {support} ; OPTION_VALUE=${2} ; shift ; {trigger} ; }
-
-      .lex "-n  \*{number}"  { printf "-n", $2; }
-
-- how do I create a file to handle unambiguating 
-- rather than using lex, could we use awk?
-
-  --long-file name
-    * assume --long-f is prefix to unambiguous string
-
-       --long-f(i(l(e?)?)?)?) file
-
-
-
-
-    1. ":" and "::" are used, maybe, to conform to the usage in getopts/getops
-    1. The use of ":" and "::" it might be a useless throwback
-    1. each variable is considered a regular expression
-       - a list can be separated by either a pipe (|) or a space
-       - e.g.,
-         - style="early modern apostrophus vinculum"
-         - style="early | modern | apostrophus | vinculum"
-
-    1. Perhaps we can add some type of argument after the code to provide a description
-       - said description code be used as part of "usage" or man page
-
-    ```TBD
-     -v | --version    { ; }
-           [
-             Prints the Git suite version that the git program came from.
-             This option is internally converted to git version ... and accepts
-              the same options as the git-version(1) command. If --help is also
-              given, it takes precedence over --version.
-            ]
-    ```
-
-    1. Should we add the ability options start with a '+', so "+, -, --" start options
-
-    1. Format of the format file:    TRIGGER VALUE ACTION DOC
-       - TRIGGER includes the OPTION
-       - examples:
-         *  --file file {...} ```doc string ```
-           * TRIGGER="--file"
-           * OPTION="--file"
-           * VALUE=file
-           * ACTION="{...}"
-           * DOC="doc string"
-         *  (-f | --file) file {...} ```doc string ```
-           * TRIGGER="--file"
-           * OPTION=< either -f or --file >
-           * VALUE=file
-           * ACTION="{...}"
-           * DOC="doc string"
-
-
-
-
+    I'm thinking of using compiler related approach to generate the code pattern for program.  This approach is based upon the tool "Lex/Flex". See clo_MUSING.md for my current thinking.
 
 ---
 
@@ -378,6 +244,17 @@ One might say, more ramblings as opposed to musing
            - i.e., a value is a parameter that does not start with a hyphen <---
 
       - providing support for default values adds value to optional values
+
+  1. Optional Values with condensed options
+      - the associated option must appear at the end of a option list
+      - that is to say, you must treat it like a required value
+      - if it is in the middle, there is too many possibilities for disambiguation
+      - Consider:
+        - optstring="d::hel::p"     # hypothetical 
+        - \<prog\> -dhelp
+        - Is this equivalent to: \<prog\> -d -h -e -l -p
+        - Is this equivalent to: \<prog\> -d he -l p
+        - Is this equivalent to: \<prog\> -d help
 
 
   1. OPT_PREFIX="-,--"
