@@ -16,14 +16,17 @@
   Short-Form Options with no arguments
     -x         Add a description for this option.
     -l         Add a description for this option.
-    -t         Add a description for this option.
 
   Short-Form Options with mandatory arguments
-    -f file    Add a description for this option.
+    -f{file}   Add a description for this option.
+    -f {file}  Add a description for this option.
 
   Short-Form Option with optional arguments
     -d[N]      Add a description for this option.
     -d N       Add a description for this option.
+
+    -t[N]      Add a description for this option.
+    -t N       Add a description for this option.
 
   Long-Form Options with no arguments
     -i, --ignore-case
