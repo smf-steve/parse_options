@@ -157,8 +157,8 @@ function fictitious() {
   # Set the Position Parameters to the Current Positional Parameters
   set -- "$@"    # This step is superfluous, but illustrative
 
-  OPTIND=1                        # Set the index of the next parameter to process
-# local _OPTIND_shadow=1          # Set a shadow index 
+  OPTIND=1                           # Set the index of the next parameter to process
+  local _OPTIND_shadow=${OPTIND}      # Set a shadow index 
   while getopts "${SHORT_OPTIONS}" flag "$@" ; do
 
     # New variables that may/will appear in final prototype utility 
@@ -167,7 +167,6 @@ function fictitious() {
     local OPTVALUE=${OPTARG:-''}
 
     # These variables are defined sole for the purpose of diagnostic/descriptive output
-    local _OPTIND_shadow=${OPTIND_shadow:-1}
     local flag_from=$(( _OPTIND_shadow ))
     local arg_from=$(( OPTIND - 1 ))       
     _OPTIND_shadow=${OPTIND}
@@ -306,35 +305,23 @@ function fictitious() {
 
       ## Manage long-form options via the "--" option
         ( - )
-          # NOTE BUG:  either of the following can be used 
-          #   --tag    // correct
-          #   - -tag   // buggy
-
           [[ -z ${OPTARG} ]] && break                # Special case of "--"
 
-          # At this point:  --banner[=value]
-          #   flag       == -
-          #   OPTARG     ==  -banner[=value]
-
+          # At this point:
+          #   OPTARG     ==  {banner}[=value]
           OPTBANNER=${OPTARG/%=*/}                   # strip off: [=value]
           OPTBANNERIND=$(( OPTIND - 1 ))
 
           OPTVALUE=${OPTARG/#*=/}                    # strip off: {banner}= 
           OPTVALUEIND=$(( OPTIND - 1 ))
 
-          # Issue: Consider --tag=  with tag having an optional value
-          #   should the OPTVALUE be set to
-          #      1. '' is the meaning of --tag=  <---
-          #      2. the defined default (well that would be --tag )
-          #      3. the value of the LOOKAHEAD (well that would be --tag)
-          #      4. unset because there is no value (but that would be "", ie., use of --tag)
 
-          # At this point both BANNER and VALUE is defined if its
-          # provided within a single parameter, unset OPTVALUE otherwise
+          # If OPTARG does not contain an equal ('=')
+          # then OPTVALUE is undefined. Hence, unset it
           [[ ${OPTARG} != *=* ]] && unset OPTVALUE OPTVALUEIND
 
-          # Classify the LOOKAHEAD
 
+          # Classify the LOOKAHEAD
           OPTLOOKAHEAD=NON_VALUE
           if (( $OPTIND <= ${#} )) && \
              [[ ${!OPTIND} != -* ]] && [[ ${!OPTIND} != +* ]] ; then
