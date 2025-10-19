@@ -10,11 +10,11 @@ As of
 
 # Next Steps/Work
   1. muse some more
-  1. finish working on fictitious, an examplar for using getopts
-  1. create a version of fictitious, as an examplar for using getopt
+  1. finish working on fictitious, an exemplar for using getopts
+  1. create a version of fictitious, as an exemplar for using getopt
   1. reframe parse_option to be self_example.bash
      - use lessons learns to couch the program similar to the use of getopts/getopt
-  1. create TDB specification for man git
+  1. create TBD specification for man git
   -
   1. Of course continually cleanup and document
 
@@ -56,8 +56,23 @@ As of
         for i in $args  ; do
 
 
+  1. Banner with a null equals value. E.g., --tag=, the possible meanings are:
+     1. '' is the meaning of --tag=  <---
+     2. the defined default (well that would be --tag )
+     3. the value of the LOOKAHEAD (well that would be --tag)
+     4. unset because there is no value (but that would be the non use of --tag
+
+  1. Unset variables in Bash
+     - you can use the "set -u" or "bash -u"
+       - to have bash check for the use of unset variables
+     - you can use [[ -v $VAR ]] to test for an unset variable
+       - but NOT when "set -u" had been issued
+     - You can then use ... [[ -z "${V+word}" ]] to make the check
+       - ${V+word} is not documented in the bash man page (at least not on my mac)
+       - If V is unset, "word" is added to the string
+
   1. Different programming approaches when using getopts
-     1. Hypen "-" used to introduce long-form options, with Programmer parsing the "="
+     1. Hyphen "-" used to introduce long-form options, with Programmer parsing the "="
         ```bash
       
         : "set -- $args"
@@ -77,7 +92,7 @@ As of
      1. With the splitting up an option base based upon an = 
         ```bash
          while getopts h489-: option ; do
-           # case "${}option}${OPTARE}"     
+           # case "${option}${OPTAR}"
            case "${option}" in
              ( -half ) : OPTARG="";;
              ( -some ) : OPTARG="value";;
@@ -119,7 +134,7 @@ As of
       - initial character:
         * ":" : getopt returns ':' instead of '?'
         * "+" : scan stops after the first non-optional character
-        * "-" : non-option parameter are outputted where they are found
+        * "-" : non-option parameter are emitted where they are found
         ```bash
         $ getopt -o "-C:a" -- -C . commit -a
         -C -C '.' 'commit' -a --
@@ -147,7 +162,7 @@ As of
 
      - creates pairs of arguments for options that may and must have a requirement
        * '--option-require'  'value'  '--option-may' ''
-       * but doesn't do this for those that DON't have an arg.
+       * but doesn't do this for those that DON'T have an arg.
        * 'option-noarg'    '--option-require'  'value'  '--option-may' ''
        * should be
        * 'option-noarg' '' '--option-require'  'value'  '--option-may' ''
@@ -155,14 +170,14 @@ As of
 
         // - getopt: a bash utility that standardize the presentation of command-line options
        //    * Definition of an option
-       //      - a word that is proceed by a hypen (-), and is not exactly '-' or '--'
+       //      - a word that is proceed by a hyphen (-), and is not exactly '-' or '--'
        //        * such a word may contain more than one option
        //        * such a word may have a suffix which is the argument to the last option
        //        * a valid option is denoted by being included within the optstring
        //        * a valid option is determined to have an argument if it is followed by a colon       // (:) within the optstring
        //    * getopt Usage:         getopt "optstring" {args}
        //    * Sample Command Line:  "command -a -o value -b arg1 -x"
-       //    * Example Usage: 
+       //    * Example Usage:
        //      ```bash
        //      args=$(getopt "abo:c" -acovalue -b arg1 -x)
        //      returnval=$?
@@ -262,7 +277,7 @@ As of
        - short-form option, e.g., -f
        - long-form option, e.g., --banner
 
-  1. Standalone prefixes
+  1. Stand-alone prefixes
      - "--" should be interpreted special
      - "-" should be interpreted special
      - That is to say these are both arguments (and not options)
@@ -287,7 +302,7 @@ As of
 
 # Thoughts:
 
-  1. Can the value of an option betin with a '-'?
+  1. Can the value of an option begin with a '-'?
      * Consider -l being an option that requires a value
      * Are the following valid:  -l-help or -l -help
      * Answer: No, define a value to NOT begin with a prefix
@@ -312,7 +327,7 @@ As of
 
 
   1. Can we programmatically define a default value for an option?
-     - That is to say, if if the option is present, but not value is given, the specification that is provided via, say getopt, defines the value.
+     - That is to say, if if the option is present, but no value is given, the specification that is provided via, say getopt, defines the value.
      - Current proper ways to assign a default value of '' to a long-form option
        * --{banner}=, --{banner}='', --{banner} ''
      - Example:

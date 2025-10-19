@@ -28,7 +28,7 @@ I'm thinking of using a compiler related approach to generate the code pattern f
     - long form options are preferred.
       - getopt -o "dir" --longoptions "dir" -a -- -dir
         --> --dir, and not -d -i -r
-    - give a longform and short form that match, prefer the short form
+    - give a long form and short form that match, prefer the short form
       - getopt -o "dir" --longoptions "dir" -a --  -d
         -->   -d --
 
@@ -128,7 +128,7 @@ I'm thinking of using a compiler related approach to generate the code pattern f
 1. Use ":{default}"  to define a default value
    - hence "::" defines an option value with a wildcard default value
 1. each variable is considered a regular expression
-1. a list of thins ca be separated by either a pipe (|) or a space
+1. a list of things can be separated by either a pipe (|) or a space
    - e.g.,
      - style="early modern apostrophus vinculum"
      - style="early | modern | apostrophus | vinculum"

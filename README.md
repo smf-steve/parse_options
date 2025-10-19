@@ -75,7 +75,7 @@ Below is a work-in-progress framing of the future README.md file
 
   * getopt: a bash utility that standardize the presentation of command-line options
     * Definition of an option
-      - a word that is proceed by a hypen (-), and is not exactly '-' or '--'
+      - a word that is proceed by a hyphen (-), and is not exactly '-' or '--'
         * such a word may contain more than one option
         * such a word may have a suffix which is the argument to the last option
         * a valid option is denoted by being included within the optstring
