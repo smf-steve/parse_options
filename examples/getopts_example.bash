@@ -139,7 +139,7 @@ function fictitious() {
 
 
   ## Step 1: The only step, Process Command line arguments using getopts
-  
+
   # Global variables associated with getopts
   # ${OPTIND}    # The index of the next parameter to be processed
   # ${OPTARG}    # The optional argument associated with current option being processed
@@ -178,7 +178,7 @@ function fictitious() {
           echo "The option '-${flag}' has been identified with no value."
           echo "    '-${flag}' stems from \${${flag_from}} == '${!flag_from}'."
           echo
-         
+
           # Insert User Code
 
           ;;
@@ -258,7 +258,7 @@ function fictitious() {
           # -t value -->  make OPTARG="value"
           #
           # -t -next -->  then T does not have a value
-          
+
           { # The following code should be provided by the "system"
             local _old_flag_from=${!flag_from}
 
@@ -479,18 +479,9 @@ echo
 #     5. Terminology is muddle with using getopts with long dash forms
 #        The implementation here hints at how to frame within a "better" utility
 #
+#     6. Case options are more readable if the options are presented more fully
+#        e.g.,     ( -l | --long ) 
 
-# BUGS:
-#   - --dir does not have a option, then an error message is always emitted
-#     * SILENT MODE does not affect this.
-
-
-
-   # Exceptions:
-   #   * use of a single -
-   #     - must be a argument typical to denote stdin
-   #     - be not be the first argument, or it must follow "--"
-   #   * "--" be supported, and is trigger as "-::"
 
    # -xd-tag is valid
 
