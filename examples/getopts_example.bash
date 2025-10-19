@@ -317,13 +317,30 @@ function fictitious() {
           #   OPTARG     ==  -banner[=value]
 
           OPTBANNER=${OPTARG/%=*/}                   # strip off: [=value]
-          OPTVALUE=${OPTARG/#*=/}                    # strip off: {banner}= 
-          [[ ${OPTARG} != *=* ]] && OPTVALUE=""
-
           OPTBANNERIND=$(( OPTIND - 1 ))
+
+          OPTVALUE=${OPTARG/#*=/}                    # strip off: {banner}= 
           OPTVALUEIND=$(( OPTIND - 1 ))
 
-          local _solo_value=false
+          # Issue: Consider --tag=  with tag having an optional value
+          #   should the OPTVALUE be set to
+          #      1. '' is the meaning of --tag=  <---
+          #      2. the defined default (well that would be --tag )
+          #      3. the value of the LOOKAHEAD (well that would be --tag)
+          #      4. unset because there is no value (but that would be "", ie., use of --tag)
+
+          # At this point both BANNER and VALUE is defined if its
+          # provided within a single parameter, unset OPTVALUE otherwise
+          [[ ${OPTARG} != *=* ]] && unset OPTVALUE OPTVALUEIND
+
+          # Classify the LOOKAHEAD
+
+          OPTLOOKAHEAD=NON_VALUE
+          if (( $OPTIND <= ${#} )) && \
+             [[ ${!OPTIND} != -* ]] && [[ ${!OPTIND} != +* ]] ; then
+               OPTLOOKAHEAD="VALUE"
+          fi
+
 
           case "${OPTBANNER}" in
             ## This option does NOT have a value
@@ -341,29 +358,37 @@ function fictitious() {
               ( dir )
 
                 { # The following code should be provided by the "system"
+                  # If the look ahead is VALUE consume it
 
-                  # Unless we are at the end of the command line
-                  # Consume the next parameter as the VALUE, if it is not defined
-
-
-                  if (( ${OPTIND} <= ${#} )) && [[ -z "${OPTVALUE}" ]] ; then
-                    # Put the next non-option parameter into $OPTVALUE
-                    if [[ ${!OPTIND:-''} != -* ]] ; then
+                  if [[ -z "${OPTVALUE+set}" ]] ; then 
+                    # Get the value from the LOOKAHEAD and consume it
+                    if [[ ${OPTLOOKAHEAD} == "VALUE" ]] ; then
+                      # ADVANCE
                       OPTVALUEIND=${OPTIND}
-                      OPTVALUE=${!OPTIND}
+                      OPTVALUE=${!OPTIND} 
+                      OPTVALUE=${OPTVALUE/\-/-}    # Unescape the "-"
+                      OPTVALUE=${OPTVALUE/\+/+}    # Unescape the "+"
                       (( OPTIND ++ ))
+                    else
+                      if [[ ${_silent_mode} != ":" ]] ; then 
+                        echo ${0}: option requires an argument --${OPTBANNER} > /dev/stderr
+                        break     # skip / break / continue ;  ???
+                      fi
                     fi
-                  fi
-                  if [[ -z "${OPTVALUE}" ]] ; then 
-                    [[ ${_silent_mode} != ":" ]] &&
-                      echo ${0}: option requires an argument -- ${OPTBANNER} > /dev/stderr
-                    break ;  # We should be silent in SILIENT MODE
-                  fi
+                  fi 
                 }
 
+                if [[ -z "${OPTVALUE+set}" ]] ; then 
+                  # By definition OPTVALUE needs to be defined
+                  # This is here to show what a programmer should do if
+                  # they are in _silent_mode  
+                  :
+                  echo ${0}: option requires an argument --${OPTBANNER}
+                  break
+                fi
                 echo "The option '--${OPTBANNER}' has been identified with the value '${OPTVALUE}'."
                 echo "    '--${OPTBANNER}' stems from \${${OPTBANNERIND}} == '${!OPTBANNERIND}'."
-                echo "    '${OPTVALUE}' stems from \${${OPTVALUEIND}} == ${!OPTVALUEIND}."
+                echo "    '${OPTVALUE}' stems from \${${OPTVALUEIND}} == '${!OPTVALUEIND}'."
                 echo 
 
                 # Insert User's Code Here
@@ -375,21 +400,23 @@ function fictitious() {
              ( tag )
                 { # The following code should be provided by the "system"
 
-                  if [[ -z "${OPTVALUE}" ]] && [[ ${!OPTIND:-''} != -* ]] ; then
-                    # Consume the next parameter as OPTVALUE
-                    OPTVALUE=${!OPTIND}
+                  if [[ -z "${OPTVALUE+set}" ]] && [[ ${OPTLOOKAHEAD} == "VALUE" ]] ; then
+                    # ADVANCE 
                     OPTVALUEIND=${OPTIND}
-                    (( OPTIND ++ ))
+                    OPTVALUE=${!OPTIND} 
+                    OPTVALUE=${OPTVALUE/\-/-}    # Unescape the "-"
+                    OPTVALUE=${OPTVALUE/\+/+}    # Unescape the "+"
+                    (( OPTIND ++ ))                    
                   fi
                 }
 
-                if [[ -z "${OPTVALUE}" ]] ; then 
-                  echo "The option '--${OPTBANNER}' has been identified without a value."
-                  echo "    '--${OPTBANNER}' stems from \${${OPTBANNERIND}} == '${!OPTBANNERIND}'."
-                else
+                if [[ ! -z ${OPTVALUE+set} ]] ; then
                   echo "The option '--${OPTBANNER}' has been identified with the value '${OPTVALUE}'."
                   echo "    '--${OPTBANNER}' stems from \${${OPTBANNERIND}} == '${!OPTBANNERIND}'."
-                  echo "    '${OPTVALUE}' stems from \${${OPTVALUEIND}} == ${!OPTVALUEIND}."
+                  echo "    '${OPTVALUE}' stems from \${${OPTVALUEIND}} == '${!OPTVALUEIND}'."
+                else
+                  echo "The option '--${OPTBANNER}' has been identified without a value."
+                  echo "    '--${OPTBANNER}' stems from \${${OPTBANNERIND}} == '${!OPTBANNERIND}'."
                 fi
                 echo 
 
