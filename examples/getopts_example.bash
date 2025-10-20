@@ -150,7 +150,7 @@ function fictitious() {
   # ${OPTBANNER}
   # ${OPTVALUE}
 
-  local SILENT=":"                             # We go into silent mode to have more control
+  local SILENT=""                             # We go into silent mode to have more control
   local SHORT_OPTIONS="hxlif:d:t-:"
   local LONG_OPTIONS="ignore-case,dir:,tag::"
 
@@ -181,13 +181,17 @@ function fictitious() {
         #   SILENT:     name=\?, OPTARG=name
 
         ( \? )
+          if (( OPTIND > $# )) ; then
+            continue
+          fi
+
           local _option=${flag}
           if [[ -n "${OPTARG+set}" ]] ; then
             # We are in SILENT mode:
             _option=${OPTARG}
           fi
           if (( ${OPTERR} != 0 )) ; then 
-            echo ${0}: ---- illegal option -- \${_local} > /dev/stderr
+            echo ${0}: ---- illegal option -- ${_option} > /dev/stderr
           fi
           ;;
 
@@ -263,7 +267,9 @@ function fictitious() {
             echo "    '${OPTARG}' stems from \${${arg_from}} == '${!arg_from}'."
             echo 
           fi
+
           # Insert User Code
+
           ;;
 
       ## This option has a required value, but we want it to MAY have a value
