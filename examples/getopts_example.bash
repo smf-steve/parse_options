@@ -234,23 +234,36 @@ function fictitious() {
           ## Need to check if the value is an option, by our def
           ## if so, we need execute an error, and put it back
 
+          if [[ ${OPTARG} == -* ]] ; then
+            echo "The option \`-${flag}\` has been identified without its required value."
+            echo "    '-${flag}' stems from \${${flag_from}} == '${!flag_from}'."
+            echo 
 
-          if [[ -z "${OPTVALUE+set}" ]] ; then 
-            # By definition OPTVALUE needs to be defined
-            # This is here to show what a programmer should do if
-            # they are in OPTERR == 1
-            :
-            echo ${0}: option requires an argument -${flag}
-            break
+            # this is NOT a valid arg
+            echo ${0}: option requires an valid value -${flag}
+            echo ${0}:    ${OPTARG} has been identified as an option
+
+            if (( ${flag_from} != ${arg_from} )) ; then 
+              (( OPTIND -- ))
+               _OPTIND_shadow=${OPTIND}
+            else
+              # recreate the positional parameters, but updating flag_from
+              {
+                local _temp=( $@ )
+                _temp[${arg_from}]="${OPTARG}"
+                set -- ${temp[@]}
+              }
+              :
+            fi
+            unset OPTARG
+            continue
+          else
+            echo "The option \`-${flag}\` has been identified with the value '${OPTARG}'."
+            echo "    '-${flag}' stems from \${${flag_from}} == '${!flag_from}'."
+            echo "    '${OPTARG}' stems from \${${arg_from}} == '${!arg_from}'."
+            echo 
           fi
-  
-          echo "The option \`-${flag}\` has been identified with the value '${OPTARG}'."
-          echo "    '-${flag}' stems from \${${flag_from}} == '${!flag_from}'."
-          echo "    '${OPTARG}' stems from \${${arg_from}} == '${!arg_from}'."
-          echo 
-
           # Insert User Code
-
           ;;
 
       ## This option has a required value, but we want it to MAY have a value
