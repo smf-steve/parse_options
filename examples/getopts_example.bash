@@ -150,6 +150,7 @@ function fictitious() {
   # ${OPTBANNER}
   # ${OPTVALUE}
 
+  local SILENT=":"                             # We go into silent mode to have more control
   local SHORT_OPTIONS="hxlif:d:t-:"
   local LONG_OPTIONS="ignore-case,dir:,tag::"
 
@@ -158,7 +159,7 @@ function fictitious() {
 
   OPTIND=1                           # Set the index of the next parameter to process
   local _OPTIND_shadow=${OPTIND}      # Set a shadow index 
-  while getopts "${SHORT_OPTIONS}" flag "$@" ; do
+  while getopts "${SILENT}${SHORT_OPTIONS}" flag "$@" ; do
 
     # New variables that may/will appear in final prototype utility 
     local OPTFLAG=${flag}
@@ -171,6 +172,40 @@ function fictitious() {
     _OPTIND_shadow=${OPTIND}
 
     case "${flag}" in
+      ## Invalid option detected
+        # From: $(man bash)
+        # If getopts detects an invalid option, it places ? into name and, if not silent, prints
+        # an error message and unsets OPTARG.  If getopts is silent, it assigns the option
+        # character found to OPTARG and does not print a diagnostic message.
+        #   STANDARD:   name=\?, unset OPTARG,  (( OPTERR==1 )) && echo error
+        #   SILENT:     name=\?, OPTARG=name
+
+        ( \? )
+          local _option=${flag}
+          if [[ -n "${OPTARG+set}" ]] ; then
+            # We are in SILENT mode:
+            _option=${OPTARG}
+          fi
+          if (( ${OPTERR} != 0 )) ; then 
+            echo ${0}: ---- illegal option -- \${_local} > /dev/stderr
+          fi
+          ;;
+
+      ## Require value missing
+        # From: $(man bash)
+        # If a required argument is not found, and getopts is not silent, it sets the value of
+        # name to a question mark (?), unsets OPTARG, and prints a diagnostic message.  If
+        # getopts is silent, it sets the value of name to a colon (:) and sets OPTARG to the
+        # option character found.
+        #   STANDARD  name=\?, unset OPTARG   ((OPTERR==1 )) && echo error
+        #   SILENT    OPTARG=name, name=:
+
+        ( : )
+          if (( ${OPTERR} != 0 )) ; then 
+            echo ${0}: option requires an argument -- \${OPTARG} > /dev/stderr
+          fi
+          ;;
+
 
       # These options do NOT have a value
         ( x | l | h )
@@ -196,6 +231,10 @@ function fictitious() {
 
       # This option MUST have a value, this value could be connected to or follows the option
         ( f )
+          ## Need to check if the value is an option, by our def
+          ## if so, we need execute an error, and put it back
+
+
           if [[ -z "${OPTVALUE+set}" ]] ; then 
             # By definition OPTVALUE needs to be defined
             # This is here to show what a programmer should do if
@@ -425,22 +464,8 @@ function fictitious() {
                 ;;
           esac
           ;;
-
-
-      ## Invalid option detected
-        ( \? )
-          ## Trigger only in silent mode
-          echo ${0}: ---- illegal option -- \${OPTARG} > /dev/stderr
-          ;;
     esac
   done
-  echo flag == ${flag}
-  ## Invalid option detected
-  #if [[ ${flag} == \? ]] ; then 
-  #   [[ ${_silent_mode} == ":" ]] && 
-  #      echo ${0}: blah illegal option -- ${!OPTIND} > /dev/stderr
-  #fi 
-
   shift $(( OPTIND -1 ))
 
   if [[ $# == 0 ]] ; then 
@@ -496,6 +521,19 @@ echo
 #
 #     6. Case options are more readable if the options are presented more fully
 #        e.g.,     ( -l | --long ) 
+
+# Getopts loses fidelity when in silent mode
+#   - silent mode is initiated with a ":" prepended to OPTSTRING
+#   - in regular mode, the name is set to \? for both
+#     1. invalid option: illegal option -- x
+#     1. missing value: option requires an argument -- f
+#   - in silent mode, the name is set to \:
+#     1. only if missing an argument
+#   * As such, in regular mode,
+#     - programmer needs to more analysis with OPTSTRING to detemine the root of the error
+#
+
+
 
 
    # -xd-tag is valid
