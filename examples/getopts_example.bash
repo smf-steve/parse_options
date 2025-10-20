@@ -18,7 +18,7 @@
 #    - with optional values: -d [N]           ("d:")
 #      # Implemented as starting with HAVING a required value
 #    - with optional values: -t [tag]         ("t")
-#      # Implemented as starting with NOT having a  value
+#      # Implemented as starting with NOT having a value
 #
 # Actual short-form string for getopts: "xli" + "f:" + "d:" + "t" + "-:"
 #
@@ -150,8 +150,7 @@ function fictitious() {
   # ${OPTBANNER}
   # ${OPTVALUE}
 
-  local _silent_mode=":"
-  local SHORT_OPTIONS="${_silent_mode}hxlif:d:t-:"
+  local SHORT_OPTIONS="hxlif:d:t-:"
   local LONG_OPTIONS="ignore-case,dir:,tag::"
 
   # Set the Position Parameters to the Current Positional Parameters
@@ -197,6 +196,15 @@ function fictitious() {
 
       # This option MUST have a value, this value could be connected to or follows the option
         ( f )
+          if [[ -z "${OPTVALUE+set}" ]] ; then 
+            # By definition OPTVALUE needs to be defined
+            # This is here to show what a programmer should do if
+            # they are in OPTERR == 1
+            :
+            echo ${0}: option requires an argument -${flag}
+            break
+          fi
+  
           echo "The option \`-${flag}\` has been identified with the value '${OPTARG}'."
           echo "    '-${flag}' stems from \${${flag_from}} == '${!flag_from}'."
           echo "    '${OPTARG}' stems from \${${arg_from}} == '${!arg_from}'."
@@ -357,7 +365,7 @@ function fictitious() {
                       OPTVALUE=${OPTVALUE/\+/+}    # Unescape the "+"
                       (( OPTIND ++ ))
                     else
-                      if [[ ${_silent_mode} != ":" ]] ; then 
+                      if (( ${OPTERR} != 0 )) ; then 
                         echo ${0}: option requires an argument --${OPTBANNER} > /dev/stderr
                         break     # skip / break / continue ;  ???
                       fi
@@ -368,7 +376,7 @@ function fictitious() {
                 if [[ -z "${OPTVALUE+set}" ]] ; then 
                   # By definition OPTVALUE needs to be defined
                   # This is here to show what a programmer should do if
-                  # they are in _silent_mode  
+                  # OPTERR != 0
                   :
                   echo ${0}: option requires an argument --${OPTBANNER}
                   break
@@ -412,20 +420,27 @@ function fictitious() {
 
              ( * )
                 # Invalid option detected
-                [[ ${_silent_mode} != ":" ]] &&
-                  echo ${0}: illegal option -- ${OPTBANNER} > /dev/stderr
+                (( ${OPTERR} != 0 )) &&
+                  echo ${0}: illegal option --${OPTBANNER} > /dev/stderr
                 ;;
           esac
           ;;
 
+
       ## Invalid option detected
         ( \? )
-          [[ ${_silent_mode} != ":" ]] &&
-            echo ${0}: illegal option -- ${OPTBANNER} > /dev/stderr
-          continue  # We have processed all options  
+          ## Trigger only in silent mode
+          echo ${0}: ---- illegal option -- \${OPTARG} > /dev/stderr
           ;;
     esac
   done
+  echo flag == ${flag}
+  ## Invalid option detected
+  #if [[ ${flag} == \? ]] ; then 
+  #   [[ ${_silent_mode} == ":" ]] && 
+  #      echo ${0}: blah illegal option -- ${!OPTIND} > /dev/stderr
+  #fi 
+
   shift $(( OPTIND -1 ))
 
   if [[ $# == 0 ]] ; then 
