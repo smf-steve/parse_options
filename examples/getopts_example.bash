@@ -1,6 +1,6 @@
 #! /usr/bin/env bash -u
 
-# This file implements the `fictitious`` function as a examplar of using the
+# This file implements the `fictitious`` function as a exemplar of using the
 # getopts builtin utility to process command-line options.
 
 ##########################################################
@@ -37,25 +37,25 @@ fi
 # Actual short-form string for getopts: "xli" + "f:" + "d:" + "t" + "-:"
 #
 #
-# NOTE:  getopts does not support either long-form options or 
+# NOTE:  getopts does not support either long-form options or
 #        optional values for short-form options.
 #
 # HENCE: Special handling is required to handle these two cases.
-#        In this implementation we implement optional values 
+#        In this implementation we implement optional values
 #        in two different ways to gain a better understanding
 #        of the preferred approach.
 #
 
 
-# The goal of our implementation is to show how to manage all possible variations 
+# The goal of our implementation is to show how to manage all possible variations
 # of options using getopts.  Note that we diverge from getopts and getopt in the way
 # we address options with optional values.  The syntactic forms that diverge are denoted
-# by "<---" (see below).  These rules allow an optional value to be represented by 
-# a separate command-line parameter.  Note that such a command-line option must NOT 
+# by "<---" (see below).  These rules allow an optional value to be represented by
+# a separate command-line parameter.  Note that such a command-line option must NOT
 # be following by:
 #
 #   1. an value that begins with a hyphen (-)
-#      - such a value will be deemed to be the next command-line option 
+#      - such a value will be deemed to be the next command-line option
 #      - if the value does start with a hyphen, it needs to be escape (\-)
 #      - NOTE: some programs, such as `cat` use a single hyphen (-) to denote stdin
 #
@@ -64,7 +64,7 @@ fi
 #      - the "--" string should be inserted before the first command-line argument
 #
 
-# For descriptive purposes we use the following nomenclature.  Note that this 
+# For descriptive purposes we use the following nomenclature.  Note that this
 # nomenclature differs from both getopts and getopts.
 #
 #   1. Definitions:
@@ -82,17 +82,17 @@ fi
 #      *  flag::  | a flag that has an optional value
 #      *  value   | a string of ASCII characters that does not start with a "-" (nor a plus (+)
 #      *  banner  | a string of alpha-numeric characters
-#  
+#
 #   1. Option Syntax:
 #     - Single option with/without a required value
-#       *  -{flag} [{value}]           OPTARG="{value} or OPTARG="" 
-#      
+#       *  -{flag} [{value}]           OPTARG="{value} or OPTARG=""
+#
 #     - Sequence of flags with the last flag having a required value
-#       *  -{flag}*{flag:}[value]      
-#       *  -{flag}*{flag:} [value]  
+#       *  -{flag}*{flag:}[value]
+#       *  -{flag}*{flag:} [value]
 #
 #     - Sequence of flags with the last flag having an optional value
-#       *  -{flag}*{flag::}[value]                         <---- 
+#       *  -{flag}*{flag::}[value]                         <----
 #       *  -{flag}*{flag::} [value]                        <----
 #
 #     - Banner with without a value
@@ -105,16 +105,16 @@ fi
 #       --{banner}={value}             OPTARG={value}
 #       --{banner} {value}             OPTARG={value}      <----
 #
-#     - Ending Option Sentinel 
+#     - Ending Option Sentinel
 #       --
 #
 #   1. Notes
-#      * a value can not start with a '-', unless the hyphen is appropriately escaped 
+#      * a value can not start with a '-', unless the hyphen is appropriately escaped
 #      * all options appear before the first ending option sentinel
 #      * all arguments appear after all options
-#      
+#
 #   1. Issues:
-# $ ./getopts_example.bash  -f-45 
+# $ ./getopts_example.bash  -f-45
 # fictitious -f-45
 # 
 # ./getopts_example.bash: option requires an valid value -f
@@ -186,18 +186,19 @@ function fictitious() {
   # Set the Position Parameters to the Current Positional Parameters
   set -- "$@"    # This step is superfluous, but illustrative
 
-  OPTIND=1                           # Set the index of the next parameter to process
-  local _OPTIND_shadow=${OPTIND}      # Set a shadow index 
+  OPTIND=1                            # Set the index of the next parameter to process
+  local _OPTIND_shadow=${OPTIND}      # Set a shadow index
+
   while getopts "${SILENT}${SHORT_OPTIONS}" flag "$@" ; do
 
-    # New variables that may/will appear in final prototype utility 
+    # New variables that may/will appear in final prototype utility
     local OPTFLAG=${flag}
     local OPTBANNER=
     local OPTVALUE=${OPTARG:-''}
 
     # These variables are defined sole for the purpose of diagnostic/descriptive output
     local flag_from=$(( _OPTIND_shadow ))
-    local arg_from=$(( OPTIND - 1 ))       
+    local arg_from=$(( OPTIND - 1 ))
     _OPTIND_shadow=${OPTIND}
 
     case "${flag}" in
@@ -220,7 +221,7 @@ function fictitious() {
             # We are in SILENT mode:
             _option=${OPTARG}
           fi
-          if (( ${OPTERR} != 0 )) ; then 
+          if (( ${OPTERR} != 0 )) ; then
             echo ${0}: ---- illegal option -- ${_option} > /dev/stderr
           fi
           ;;
@@ -236,7 +237,7 @@ function fictitious() {
           #   STANDARD  name=\?, unset OPTARG   ((OPTERR==1 )) && echo error
           #   SILENT    OPTARG=name, name=:
 
-          if (( ${OPTERR} != 0 )) ; then 
+          if (( ${OPTERR} != 0 )) ; then
             echo ${0}: option requires an argument -- \${OPTARG} > /dev/stderr
           fi
 
@@ -259,7 +260,7 @@ function fictitious() {
           }
 
           # Insert User Code
-          ${TEST} && { 
+          ${TEST} && {
             echo -n "'-$flag' "
           }
 
@@ -290,15 +291,15 @@ function fictitious() {
       # This option MUST have a value, either connected to or following the option
         ( f )
           ######################################################################
-          # The following code should be provided by the "system" 
+          # The following code should be provided by the "system"
           #
           # Validate that the required value is not an option by our definition
-          { 
+          {
             if [[ ${OPTARG} == -* ]] ; then
               echo ${0}: option requires an valid value -${flag}
               echo ${0}:    ${OPTARG} has been identified as an option
 
-              if (( ${flag_from} == ${arg_from} )) ; then 
+              if (( ${flag_from} == ${arg_from} )) ; then
                 { # Modify ${!arg_from} to be JUST the arg for reconsideration
                   local _temp=( $@ )
                   _temp[${arg_from}]="${OPTARG}"
@@ -320,7 +321,7 @@ function fictitious() {
             echo "The option \`-${flag}\` has been identified with the value '${OPTARG}'."
             echo "    '-${flag}' stems from \${${flag_from}} == '${!flag_from}'."
             echo "    '${OPTARG}' stems from \${${arg_from}} == '${!arg_from}'."
-            echo 
+            echo
           }
 
          ${TEST} && {
@@ -329,14 +330,14 @@ function fictitious() {
 
 
           # Insert User Code
-  
+
           ;;
 
 
       # May require an option, but defined as a required option: "d:"
         ( d )  # "d:"
           ######################################################################
-          # The following code should be provided by the "system" 
+          # The following code should be provided by the "system"
           #
           # Validate the associated value is NOT an option
           # If it is an option, put it back
@@ -345,12 +346,12 @@ function fictitious() {
           ## Treat as if it is required to have a value
           ## Then put back the value if we need to.
 
-          # Issue: if -d is the last parameter.  
+          # Issue: if -d is the last parameter.
           #        - An error message will be generated by getopts
           #        - Require the insertion of "--"
 
           # -dvalue  -->  $OPTARG == "value"
-          # -dv      -->  whatif v is a flag, so what it is deemed a value
+          # -dv      -->  what if v is a flag, so what it is deemed a value
           # -d value -->  $OPTARG == "value"
           #
           # -d -next -->  $OPTARG needs to be put back, (( OPTIND -- ))
@@ -359,7 +360,7 @@ function fictitious() {
           # -d-next    this causes an infinite loop
 
 ## This next could be a problem
-          { # The following code should be provided by the "system" 
+          { # The following code should be provided by the "system"
             if [[ ${flag_from} != ${arg_from} ]] ; then
 
               ## Need to ensure the next parameter is NOT an option
@@ -395,9 +396,9 @@ function fictitious() {
 
 
       # May require an option, but defined as having no option: "t"
-        ( t ) 
+        ( t )
           ######################################################################
-          # The following code should be provided by the "system" 
+          # The following code should be provided by the "system"
           #
           # Validate the associated value is NOT an option
           # If it is an option, put it back
@@ -408,21 +409,21 @@ function fictitious() {
           ## If there is consume the next token
 
           # -tvalue  -->  make OPTARG="value"
-          # -tv      -->  whatif v is a flag, so what it is deemed a value
+          # -tv      -->  what if v is a flag, so what it is deemed a value
           # -t value -->  make OPTARG="value"
           #
           # -t -next -->  then T does not have a value
 
           ######################################################################
-          # The following code should be provided by the "system" 
+          # The following code should be provided by the "system"
           #
-          { 
+          {
             local _old_flag_from=${!flag_from}
 
-            if [[ ${!flag_from} == *t ]] ; then 
+            if [[ ${!flag_from} == *t ]] ; then
               # We are at the end of the option list
               (( arg_from = arg_from + 1 ))
-              if [[ ${!arg_from} != -* ]] ; then 
+              if [[ ${!arg_from} != -* ]] ; then
                 # We have a value
                 OPTARG=${!arg_from}
                 (( OPTIND ++ ))
@@ -441,7 +442,7 @@ function fictitious() {
                 set -- ${temp[@]}
               }
 
-              (( OPTIND ++ ))            
+              (( OPTIND ++ ))
               (( _OPTIND_shadow = OPTIND ))
             fi
             OPTARG=${OPTARG/\\-/-}    # Un-Escape the "-"
@@ -459,7 +460,7 @@ function fictitious() {
             fi
             echo
           }
-         
+
           ${TEST} && {
              echo "-${flag}' '${OPTARG/#-/\\-}' "
           }
@@ -472,8 +473,8 @@ function fictitious() {
       ## Manage long-form options via the "--" option
         ( - )
           ######################################################################
-          # The following code should be provided by the "system" 
-          # 
+          # The following code should be provided by the "system"
+          #
           {
             [[ -z ${OPTARG} ]] && break                # Special case of "--"
 
@@ -482,7 +483,7 @@ function fictitious() {
             OPTBANNER=${OPTARG/%=*/}                   # strip off: [=value]
             OPTBANNERIND=$(( OPTIND - 1 ))
 
-            OPTVALUE=${OPTARG/#*=/}                    # strip off: {banner}= 
+            OPTVALUE=${OPTARG/#*=/}                    # strip off: {banner}=
             OPTVALUEIND=$(( OPTIND - 1 ))
 
 
@@ -525,29 +526,28 @@ function fictitious() {
                 # The following code should be provided by the "system"
                 # If the look ahead is VALUE consume it
                 {
-                  if [[ -z "${OPTVALUE+set}" ]] ; then 
+                  if [[ -z "${OPTVALUE+set}" ]] ; then
                     # Get the value from the LOOKAHEAD and consume it
                     if [[ ${OPTLOOKAHEAD} == "VALUE" ]] ; then
                       # ADVANCE
                       OPTVALUEIND=${OPTIND}
-                      OPTVALUE=${!OPTIND} 
+                      OPTVALUE=${!OPTIND}
                       OPTVALUE=${OPTVALUE/\\-/-}    # Un-Escape the "-"
                       (( OPTIND ++ ))
                     else
-                      if (( ${OPTERR} != 0 )) ; then 
+                      if (( ${OPTERR} != 0 )) ; then
                         echo ${0}: option requires an argument --${OPTBANNER} > /dev/stderr
-                        break     # skip / break / continue ;  ???
+                        break
                       fi
                     fi
-                  fi 
-                
+                  fi
 
-                  if [[ -z "${OPTVALUE+set}" ]] ; then 
+                  if [[ -z "${OPTVALUE+set}" ]] ; then
                     # By definition OPTVALUE needs to be defined
                     # This is here to show what a programmer should do if
                     # OPTERR != 0
                     :
-                    echo ${0}: option requires an argument --${OPTBANNER}
+                    echo ${0}: option requires an argument --${OPTBANNER} > /dev/stderr
                     break
                   fi
                 }
@@ -557,7 +557,7 @@ function fictitious() {
                   echo "The option '--${OPTBANNER}' has been identified with the value '${OPTVALUE}'."
                   echo "    '--${OPTBANNER}' stems from \${${OPTBANNERIND}} == '${!OPTBANNERIND}'."
                   echo "    '${OPTVALUE}' stems from \${${OPTVALUEIND}} == '${!OPTVALUEIND}'."
-                  echo 
+                  echo
                 }
 
                 ${TEST} && {
@@ -575,11 +575,11 @@ function fictitious() {
                 { # The following code should be provided by the "system"
 
                   if [[ -z "${OPTVALUE+set}" ]] && [[ ${OPTLOOKAHEAD} == "VALUE" ]] ; then
-                    # ADVANCE 
+                    # ADVANCE
                     OPTVALUEIND=${OPTIND}
                     OPTVALUE=${!OPTIND} 
-                    OPTVALUE=${OPTVALUE/\\-/-}    # Unescape the "-"
-                    (( OPTIND ++ ))                    
+                    OPTVALUE=${OPTVALUE/\\-/-}    # Un-Escape the "-"
+                    (( OPTIND ++ ))
                   fi
                 }
 
@@ -592,7 +592,7 @@ function fictitious() {
                     echo "The option '--${OPTBANNER}' has been identified without a value."
                     echo "    '--${OPTBANNER}' stems from \${${OPTBANNERIND}} == '${!OPTBANNERIND}'."
                   fi
-                  echo 
+                  echo
                 }
 
                 ${TEST} && {
@@ -627,9 +627,9 @@ function fictitious() {
   }
 
   ${ILLUSTRATE} && {
-    if [[ $# == 0 ]] ; then 
+    if [[ $# == 0 ]] ; then
       echo "There are no remaining arguments to fictitious."
-    else 
+    else
       echo -n "The arguments to fictitious are: "
       for i in "$@" ; do
          echo -n "'$i' "
@@ -637,7 +637,7 @@ function fictitious() {
     fi
     echo
   }
-  
+
   ${TEST} && {
     echo
   }
@@ -655,7 +655,7 @@ function fictitious() {
 
 if [[ "$#" == 0 ]] ; then
   set -- --dir --dir=/usr/bin  --dir /local/sbin -d arg1 arg2
-fi 
+fi
 ${ILLUSTRATE} && {
   echo fictitious "$@"
   echo
@@ -670,10 +670,10 @@ fictitious "$@"
 #
 #     1. It would be better if the option of -i and -ignore-case were together
 #        in the same switch case
-#     
+#
 #     2. Management of values for long form options must be managed by the programmer.
 #        It would be better if a double switch case was not require
-#  
+#
 #     3. It would be better if there was way to "mark" long-form option as to their
 #        argument type as is the case with short-form options
 #        (Note this is provided by getopt)
@@ -685,7 +685,7 @@ fictitious "$@"
 #        The implementation here hints at how to frame within a "better" utility
 #
 #     6. Case options are more readable if the options are presented more fully
-#        e.g.,     ( -l | --long ) 
+#        e.g.,     ( -l | --long )
 
 # Getopts loses fidelity when in silent mode
 #   - silent mode is initiated with a ":" prepended to OPTSTRING
@@ -695,7 +695,7 @@ fictitious "$@"
 #   - in silent mode, the name is set to \:
 #     1. only if missing an argument
 #   * As such, in regular mode,
-#     - programmer needs to more analysis with OPTSTRING to detemine the root of the error
+#     - programmer needs to more analysis with OPTSTRING to determine the root of the error
 #
 
 
