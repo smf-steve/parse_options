@@ -3,6 +3,18 @@
 # This file implements the `fictitious`` function as a examplar of using the
 # getopts builtin utility to process command-line options.
 
+##########
+# The following variables are to alter the output
+# of the program for the expected behavior.
+
+DEBUG=true
+DEBUG="false"
+
+ILLUSTRATE=true
+#ILLUSTRATE=false
+
+# Note that both should NOT be true at the same time
+##########
 
 # Usage: fictitious [options] [--] arg1 arg2
 # See:   fictitious.md
@@ -133,10 +145,8 @@
 #     -xdx                   #  this is the case above where h is an option
 #             
 
-
 function fictitious() {
   # Usage: fictitious [options] [--] arg1 arg2
-
 
   ## Step 1: The only step, Process Command line arguments using getopts
 
@@ -208,25 +218,43 @@ function fictitious() {
           if (( ${OPTERR} != 0 )) ; then 
             echo ${0}: option requires an argument -- \${OPTARG} > /dev/stderr
           fi
+
+          ${DEBUG} && {
+             echo -n "'$OPTARG' <error> "
+          }
+
+          # Insert User Code
+
           ;;
 
 
       # These options do NOT have a value
         ( x | l | h )
-          echo "The option '-${flag}' has been identified with no value."
-          echo "    '-${flag}' stems from \${${flag_from}} == '${!flag_from}'."
-          echo
+          ${ILLUSTRATE} && {
+            echo "The option '-${flag}' has been identified with no value."
+            echo "    '-${flag}' stems from \${${flag_from}} == '${!flag_from}'."
+            echo
+          }
 
           # Insert User Code
+          ${DEBUG} && { 
+            echo -n "'-$flag' "
+          }
 
           ;;
 
       # This option does NOT have a value, but is separated out from the above options
       # ideally, it should be paired with --ignore-case
         ( i )
-          echo "The option \`-${flag}\` has been identified with no value."
-          echo "    \`-${flag}' stems from \${${flag_from}} == '${!flag_from}'."
-          echo
+          ${ILLUSTRATE} && {
+            echo "The option \`-${flag}\` has been identified with no value."
+            echo "    \`-${flag}' stems from \${${flag_from}} == '${!flag_from}'."
+            echo
+          }
+
+          ${DEBUG} && {
+            echo -n "'-${flag}' "
+          }
 
           # Insert User Code
           #    for case insensitivity (see option "ignore-case" below)
@@ -239,11 +267,7 @@ function fictitious() {
           ## if so, we need execute an error, and put it back
 
           if [[ ${OPTARG} == -* ]] ; then
-            echo "The option \`-${flag}\` has been identified without its required value."
-            echo "    '-${flag}' stems from \${${flag_from}} == '${!flag_from}'."
-            echo 
-
-            # this is NOT a valid arg
+            # this is NOT a valid value
             echo ${0}: option requires an valid value -${flag}
             echo ${0}:    ${OPTARG} has been identified as an option
 
@@ -261,14 +285,19 @@ function fictitious() {
             fi
             unset OPTARG
             continue
-          else
+          fi
+
+          ${ILLUSTRATE} && {
             echo "The option \`-${flag}\` has been identified with the value '${OPTARG}'."
             echo "    '-${flag}' stems from \${${flag_from}} == '${!flag_from}'."
             echo "    '${OPTARG}' stems from \${${arg_from}} == '${!arg_from}'."
             echo 
-          fi
+          }
 
           # Insert User Code
+          ${DEBUG} && {
+            echo -n "'-${flag}' '${OPTARG}' "
+          }
 
           ;;
 
@@ -300,17 +329,22 @@ function fictitious() {
             fi
           }
 
-          if [[ -z ${OPTARG:-''} ]] then
-            echo "The option '-${flag}' has been identified without a value."
-            echo "    '-${flag}' stems from \${${flag_from}} == '${!flag_from}'"
-          else
-            echo "The option '-${flag}' has been identified with the value '${OPTARG}'".
-            echo "    '-${flag}' stems from \${$((flag_from))} == '${!flag_from}'"
-            echo "    '${OPTARG}' stems from \${${arg_from}} == '${!arg_from}'."
-          fi
-          echo
+          ${ILLUSTRATE} && {
+            if [[ -z ${OPTARG:-''} ]] then
+              echo "The option '-${flag}' has been identified without a value."
+              echo "    '-${flag}' stems from \${${flag_from}} == '${!flag_from}'"
+            else
+              echo "The option '-${flag}' has been identified with the value '${OPTARG}'".
+              echo "    '-${flag}' stems from \${$((flag_from))} == '${!flag_from}'"
+              echo "    '${OPTARG}' stems from \${${arg_from}} == '${!arg_from}'."
+            fi
+            echo
+          }
 
           # Insert User Code
+          ${DEBUG} && {
+            echo -n "'-$flag' '${OPTARG}' "
+          }
 
           ;;
 
@@ -355,15 +389,21 @@ function fictitious() {
             fi
           }
 
-          if [[ -z ${OPTARG:-''} ]] then
+          ${ILLUSTRATE} && {
+            if [[ -z ${OPTARG:-''} ]] then
             echo "The option '-${flag}' has been identified without a value."
             echo "    '-${flag}' stems from \${${flag_from}} == '${!flag_from}'"
-          else
-            echo "The option '-${flag}' has been identified with the value '${OPTARG}'".
-            echo "    '-${flag}' stems from \${$((flag_from))} == '${_old_flag_from}'"
-            echo "    '${OPTARG}' stems from \${${arg_from}} == '${!arg_from}'."
-          fi
-          echo
+            else
+              echo "The option '-${flag}' has been identified with the value '${OPTARG}'".
+              echo "    '-${flag}' stems from \${$((flag_from))} == '${_old_flag_from}'"
+              echo "    '${OPTARG}' stems from \${${arg_from}} == '${!arg_from}'."
+            fi
+            echo
+          }
+         
+          ${DEBUG} && {
+             echo "-${flag}' '${OPTARG}' "
+          }
 
           # Insert User Code
 
@@ -398,9 +438,16 @@ function fictitious() {
           case "${OPTBANNER}" in
             ## This option does NOT have a value
               ( ignore-case )
-                echo "The option '--${OPTBANNER}' has been identified."
-                echo "    '--${OPTBANNER}' stems from \${${OPTBANNERIND}}."
-                echo
+
+                ${ILLUSTRATE} && {
+                  echo "The option '--${OPTBANNER}' has been identified."
+                  echo "    '--${OPTBANNER}' stems from \${${OPTBANNERIND}}."
+                  echo
+                }
+
+                ${DEBUG} && {
+                  echo -n "'--${OPT_BANNER}' "
+                }
 
                 # Insert User's Code Here
                 #   e.g., turn case insensitivity (see option "i" above)
@@ -439,13 +486,19 @@ function fictitious() {
                   echo ${0}: option requires an argument --${OPTBANNER}
                   break
                 fi
-                echo "The option '--${OPTBANNER}' has been identified with the value '${OPTVALUE}'."
-                echo "    '--${OPTBANNER}' stems from \${${OPTBANNERIND}} == '${!OPTBANNERIND}'."
-                echo "    '${OPTVALUE}' stems from \${${OPTVALUEIND}} == '${!OPTVALUEIND}'."
-                echo 
+
+                ${ILLUSTRATE} && {
+                  echo "The option '--${OPTBANNER}' has been identified with the value '${OPTVALUE}'."
+                  echo "    '--${OPTBANNER}' stems from \${${OPTBANNERIND}} == '${!OPTBANNERIND}'."
+                  echo "    '${OPTVALUE}' stems from \${${OPTVALUEIND}} == '${!OPTVALUEIND}'."
+                  echo 
+                }
+
+                ${DEBUG} && {
+                    echo -n "'--${OPT_BANNER}' '${OPTVALUE}' "
+                }
 
                 # Insert User's Code Here
-
                 ;;
 
 
@@ -463,17 +516,28 @@ function fictitious() {
                   fi
                 }
 
-                if [[ ! -z ${OPTVALUE+set} ]] ; then
-                  echo "The option '--${OPTBANNER}' has been identified with the value '${OPTVALUE}'."
-                  echo "    '--${OPTBANNER}' stems from \${${OPTBANNERIND}} == '${!OPTBANNERIND}'."
-                  echo "    '${OPTVALUE}' stems from \${${OPTVALUEIND}} == '${!OPTVALUEIND}'."
-                else
-                  echo "The option '--${OPTBANNER}' has been identified without a value."
-                  echo "    '--${OPTBANNER}' stems from \${${OPTBANNERIND}} == '${!OPTBANNERIND}'."
-                fi
-                echo 
+                ${ILLUSTRATE} && {
+                  if [[ ! -z ${OPTVALUE+set} ]] ; then
+                    echo "The option '--${OPTBANNER}' has been identified with the value '${OPTVALUE}'."
+                    echo "    '--${OPTBANNER}' stems from \${${OPTBANNERIND}} == '${!OPTBANNERIND}'."
+                    echo "    '${OPTVALUE}' stems from \${${OPTVALUEIND}} == '${!OPTVALUEIND}'."
+                  else
+                    echo "The option '--${OPTBANNER}' has been identified without a value."
+                    echo "    '--${OPTBANNER}' stems from \${${OPTBANNERIND}} == '${!OPTBANNERIND}'."
+                  fi
+                  echo 
+                }
+
+                ${DEBUG} && {
+                  if [[ ! -z ${OPTVALUE+set} ]] ; then
+                    echo -n "'--${OPTBANNER}' '${OPTVALUE}' "
+                  else
+                    echo -n "'--${OPTBANNER}' "
+                  fi
+                }
 
                 # Insert User's Code Here
+
                 ;;
 
              ( * )
@@ -487,16 +551,26 @@ function fictitious() {
   done
   shift $(( OPTIND -1 ))
 
-  if [[ $# == 0 ]] ; then 
-    echo "There are no remaining arguments to fictitious."
-  else 
-    echo -n "The arguments to fictitious are: "
+  ${DEBUG} && {
     for i in "$@" ; do
-       echo -n \'$i\' 
-       echo -n ' '
+      echo -n "'$i' "
     done
-  fi
-  echo
+  }
+
+  ${ILLUSTRATE} && {
+    if [[ $# == 0 ]] ; then 
+      echo "There are no remaining arguments to fictitious."
+    else 
+      echo -n "The arguments to fictitious are: "
+      for i in "$@" ; do
+         echo -n "'$i' "
+      done
+    fi
+  }
+  ${DEBUG} && {
+    echo
+  }
+
 
 
   # Step 2: Continue with the processing of `fictitious`
@@ -508,14 +582,15 @@ function fictitious() {
 
 ## Main:
 
-echo
 if [[ "$#" == 0 ]] ; then
   set -- --dir --dir=/usr/bin  --dir /local/sbin -d arg1 arg2
 fi 
-echo fictitious "$@"
-echo
+${ILLUSTRATE} && {
+  echo fictitious "$@"
+  echo
+}
 fictitious "$@"
-echo
+
 
 
 # Lessons Learned:
