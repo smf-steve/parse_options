@@ -160,3 +160,23 @@ I'm thinking of using a compiler related approach to generate the code pattern f
      * ACTION="{...}"
      * DOC="doc string"
 
+1. For the output of the tool, we could canonicalize the options
+  1. We have a rule that states that all options start with a hyphen (-), which differs from getopts/getopts
+     - one issue is options with optional values, in which said value can be a negative number.  (We can also include explicit positive numbers, i.e., +45.)
+     - to address this, the lookahead of a option can be used identify that -45 should be a value and not an option.
+     * possible implication is that the {TBD}\_tool is that yylex should return two tokens: option and value
+       - --option=value
+       - --option={default}, --option={lambda}, --option={value}
+       - --option='' ('' is a value, a null string) == --option=
+       - --option, --option={lambda},
+
+      * we could add multiple values for an option. consider
+        - git log -L<start>,<end>:<file>
+        - "-L={start} {end} {file}"
+
+1. alternatively for the tool to emit the canonicalize the options,
+   the tool could iterative call a user defined program.
+   1. given the "git log -L example"
+      1. emit "-L={start} {end} {file}"
+      1. "userprog" -L {start} {end} {file}
+         - user program access the values via ${1}, ${2}, ${3}
