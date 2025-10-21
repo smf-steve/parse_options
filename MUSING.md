@@ -302,6 +302,63 @@ As of
 
 # Thoughts:
 
+  1. Just added TEST and ILLUSTRATE process, need to determine
+     how to present the command-line.  Right now it is similar 
+     to getopt
+     1. how to present errors
+     1. how to present optional args, that are meant NOT to be there (in the future, it could be the default)
+        - e.g., '-f' <default>, '-f' {default}
+     1. how to present errors
+        - e.g., '-f' <error>,  '-f' {error}
+     1. how to present long options, e.g.,
+        - given:  --dir /usr/log
+        - --> '--dir=/usr/log' , '--dir' '/usr/log'
+        - given:  --tag --
+        - --> '--tag=' , '--tag={default}', '--tag' --tag {lambda}
+     1. how to present the prefix approprate: +,-,++
+
+  1. We have an issue with regard to how options are used throughout industry
+     - consider git and openssl  AND getopt --alternative 
+     - getopt:
+       - short-form options with optional values: must be physically connected
+       - long-form options with optional/required values: must be physically connected
+     - getopt --alternative  and/or openssl
+       - we have long-form with required values NOT physically connected
+       - openssl example:  -writerand file
+       - but we don't have OPTIONAL values
+
+===
+So where are we:  current getopt can support openssl
+$ getopt -o "-" -a -l "tag:" -- -tag hello
+ --tag '' 'hello' --
+
+
+
+For the examples below, why is -t ambiguous
+  -- is this the case for all one letter options
+
+$ getopt -o "" -a -l "tag:" -- --tag -tag hello --tag=hello -t=hello
+getopt: option `-t' is ambiguous
+ --tag '' --tag '' --tag 'hello' -- 'hello'
+
+Here tag is an option that requires a value, via openssl
+  -tag hello should be valid but it is not
+
+====
+$ getopt -o "-" -a -l "tag:" -- --tag -tag hello --tag=hello -t=hello
+getopt: option `-t' is ambiguous
+ --tag '' --tag '' 'hello' --tag 'hello' --
+
+here the value stays in the right spot but still not associated with --tag
+
+====
+
+$ getopt -o "-t:" -a -l "tag:" -- --tag -tag hello --tag=hello -t=hello -t hello
+ --tag '' --tag '' 'hello' --tag 'hello' -t '=hello' -t 'hello' --
+
+
+====
+
   1. Can the value of an option begin with a '-'?
      * Consider -l being an option that requires a value
      * Are the following valid:  -l-help or -l -help
