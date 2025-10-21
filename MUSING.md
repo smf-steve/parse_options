@@ -301,6 +301,18 @@ As of
 
 
 # Thoughts:
+  1. We have a rule that states that all options start with a hyphen (-), which differs from getopts/getopts
+     - one issue is options with optional values, in which said value can be a negative number.  (We can also include explicit positive numbers, i.e., +45.)
+     - to address this, the lookahead of a option can be used identify that -45 should be a value and not an option.
+     * possible implication is that the {TBD}\_tool is that yylex should return two tokens: option and value
+       - --option=value
+       - --option={default}, --option={lambda}, --option={value}
+       - --option='' ('' is a value, a null string) == --option=
+       - --option, --option={lambda},
+
+      * we could add multiple values for an option. consider
+        - git log -L<start>,<end>:<file>
+        - "-L={start} {end} {file}"
 
   1. Just added TEST and ILLUSTRATE process, need to determine
      how to present the command-line.  Right now it is similar 
@@ -315,7 +327,7 @@ As of
         - --> '--dir=/usr/log' , '--dir' '/usr/log'
         - given:  --tag --
         - --> '--tag=' , '--tag={default}', '--tag' --tag {lambda}
-     1. how to present the prefix approprate: +,-,++
+     1. how to present the prefix appropriate: +,-,++
 
   1. We have an issue with regard to how options are used throughout industry
      - consider git and openssl  AND getopt --alternative 
