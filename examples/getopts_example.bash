@@ -6,12 +6,14 @@
 ##########
 # The following variables are to alter the output
 # of the program for the expected behavior.
+# TEST= true | false
+# ILLUSTRATE= true | false
 
-TEST=true
-TEST=false
-
-ILLUSTRATE=true
-#ILLUSTRATE=false
+TEST=${TEST:-false}
+ILLUSTRATE=${ILLUSTRATE:-true}
+if [[ ${TEST} == true ]] ; then
+    ILLUSTRATE=false
+fi
 
 # Note that both should NOT be true at the same time
 ##########
@@ -161,8 +163,9 @@ function fictitious() {
   # ${OPTVALUE}
 
   local SILENT=""                             # We go into silent mode to have more control
-  local SHORT_OPTIONS="hxlif:d:t-:"
+  local SHORT_OPTIONS="xlif:d:t-:"
   local LONG_OPTIONS="ignore-case,dir:,tag::"
+
 
   # Set the Position Parameters to the Current Positional Parameters
   set -- "$@"    # This step is superfluous, but illustrative
@@ -229,7 +232,7 @@ function fictitious() {
 
 
       # These options do NOT have a value
-        ( x | l | h )
+        ( x | l )
           ${ILLUSTRATE} && {
             echo "The option '-${flag}' has been identified with no value."
             echo "    '-${flag}' stems from \${${flag_from}} == '${!flag_from}'."
@@ -565,7 +568,9 @@ function fictitious() {
          echo -n "'$i' "
       done
     fi
+    echo
   }
+  
   ${TEST} && {
     echo
   }
