@@ -7,8 +7,8 @@
 # The following variables are to alter the output
 # of the program for the expected behavior.
 
-DEBUG=true
-DEBUG="false"
+TEST=true
+TEST=false
 
 ILLUSTRATE=true
 #ILLUSTRATE=false
@@ -69,7 +69,7 @@ ILLUSTRATE=true
 #      * A command-line parameter is used to change the behavior of a program
 #      * An option is an parameter that starts with a hyphen (-) or double hyphens (--)
 #      * An command-line parameter is specifies what the program operates over.
-#      * A special case of an option may start with a plus (+) [NOT IMPLEMENTED AT THIS TIME]
+#      * A special case of an option may start with a plus (+) [NOT IMPLEMENTED]
 #      * An option may be followed by an associated value
 #      * Such a value may not begin with a hyphen (-) (nor a plus (+))
 #      * Examples:  --file {file},  -d,  +x, --file={file}
@@ -219,7 +219,7 @@ function fictitious() {
             echo ${0}: option requires an argument -- \${OPTARG} > /dev/stderr
           fi
 
-          ${DEBUG} && {
+          ${TEST} && {
              echo -n "'$OPTARG' <error> "
           }
 
@@ -237,7 +237,7 @@ function fictitious() {
           }
 
           # Insert User Code
-          ${DEBUG} && { 
+          ${TEST} && { 
             echo -n "'-$flag' "
           }
 
@@ -252,7 +252,7 @@ function fictitious() {
             echo
           }
 
-          ${DEBUG} && {
+          ${TEST} && {
             echo -n "'-${flag}' "
           }
 
@@ -295,7 +295,7 @@ function fictitious() {
           }
 
           # Insert User Code
-          ${DEBUG} && {
+          ${TEST} && {
             echo -n "'-${flag}' '${OPTARG}' "
           }
 
@@ -342,7 +342,7 @@ function fictitious() {
           }
 
           # Insert User Code
-          ${DEBUG} && {
+          ${TEST} && {
             echo -n "'-$flag' '${OPTARG}' "
           }
 
@@ -401,7 +401,7 @@ function fictitious() {
             echo
           }
          
-          ${DEBUG} && {
+          ${TEST} && {
              echo "-${flag}' '${OPTARG}' "
           }
 
@@ -429,10 +429,8 @@ function fictitious() {
 
           # Classify the LOOKAHEAD
           OPTLOOKAHEAD=NON_VALUE
-          if (( $OPTIND <= ${#} )) && \
-             [[ ${!OPTIND} != -* ]] && [[ ${!OPTIND} != +* ]] ; then
-               OPTLOOKAHEAD="VALUE"
-          fi
+          (( $OPTIND <= ${#} )) && [[ ${!OPTIND} != -* ]] && \
+            OPTLOOKAHEAD="VALUE"
 
 
           case "${OPTBANNER}" in
@@ -445,7 +443,7 @@ function fictitious() {
                   echo
                 }
 
-                ${DEBUG} && {
+                ${TEST} && {
                   echo -n "'--${OPT_BANNER}' "
                 }
 
@@ -467,7 +465,7 @@ function fictitious() {
                       OPTVALUEIND=${OPTIND}
                       OPTVALUE=${!OPTIND} 
                       OPTVALUE=${OPTVALUE/\-/-}    # Unescape the "-"
-                      OPTVALUE=${OPTVALUE/\+/+}    # Unescape the "+"
+                      #OPTVALUE=${OPTVALUE/\+/+}   # Unescape the "+"
                       (( OPTIND ++ ))
                     else
                       if (( ${OPTERR} != 0 )) ; then 
@@ -494,7 +492,7 @@ function fictitious() {
                   echo 
                 }
 
-                ${DEBUG} && {
+                ${TEST} && {
                     echo -n "'--${OPT_BANNER}' '${OPTVALUE}' "
                 }
 
@@ -511,7 +509,7 @@ function fictitious() {
                     OPTVALUEIND=${OPTIND}
                     OPTVALUE=${!OPTIND} 
                     OPTVALUE=${OPTVALUE/\-/-}    # Unescape the "-"
-                    OPTVALUE=${OPTVALUE/\+/+}    # Unescape the "+"
+                    #OPTVALUE=${OPTVALUE/\+/+}    # Unescape the "+"
                     (( OPTIND ++ ))                    
                   fi
                 }
@@ -528,7 +526,7 @@ function fictitious() {
                   echo 
                 }
 
-                ${DEBUG} && {
+                ${TEST} && {
                   if [[ ! -z ${OPTVALUE+set} ]] ; then
                     echo -n "'--${OPTBANNER}' '${OPTVALUE}' "
                   else
@@ -551,7 +549,8 @@ function fictitious() {
   done
   shift $(( OPTIND -1 ))
 
-  ${DEBUG} && {
+  ${TEST} && {
+    echo -n "-- "
     for i in "$@" ; do
       echo -n "'$i' "
     done
@@ -567,7 +566,7 @@ function fictitious() {
       done
     fi
   }
-  ${DEBUG} && {
+  ${TEST} && {
     echo
   }
 
