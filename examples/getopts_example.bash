@@ -3,7 +3,7 @@
 # This file implements the `fictitious`` function as a examplar of using the
 # getopts builtin utility to process command-line options.
 
-##########
+##########################################################
 # The following variables are to alter the output
 # of the program for the expected behavior.
 # TEST= true | false
@@ -16,7 +16,7 @@ if [[ ${TEST} == true ]] ; then
 fi
 
 # Note that both should NOT be true at the same time
-##########
+##########################################################
 
 # Usage: fictitious [options] [--] arg1 arg2
 # See:   fictitious.md
@@ -114,8 +114,24 @@ fi
 #      * all arguments appear after all options
 #      
 #   1. Issues:
+# $ ./getopts_example.bash  -f-45 
+# fictitious -f-45
+# 
+# ./getopts_example.bash: option requires an valid value -f
+# ./getopts_example.bash: -45 has been identified as an option
+# There are no remaining arguments to fictitious.
 # 
 #
+# ./getopts_example.bash  -d45 -d-45 -d 45 -d '\-45' -d arg
+# infinite loop
+#
+# $ ./getopts_example.bash  -t45 -t-45 -t 45 -t '\-45' -t arg
+# fictitious -t45 -t-45 -t 45 -t \-45 -t arg
+# 
+# The option '-t' has been identified with the value '45'.
+#     '-t' stems from ${1} == '-t45'
+# ./getopts_example.bash: line 431: !arg_from: unbound variable
+
 # Missing required value:
 #   Need to determine what to do when an option is missing a required value.
 #   E.g.,  --dir --{banner}
@@ -185,15 +201,16 @@ function fictitious() {
     _OPTIND_shadow=${OPTIND}
 
     case "${flag}" in
-      ## Invalid option detected
-        # From: $(man bash)
-        # If getopts detects an invalid option, it places ? into name and, if not silent, prints
-        # an error message and unsets OPTARG.  If getopts is silent, it assigns the option
-        # character found to OPTARG and does not print a diagnostic message.
-        #   STANDARD:   name=\?, unset OPTARG,  (( OPTERR==1 )) && echo error
-        #   SILENT:     name=\?, OPTARG=name
 
+      ## Invalid option detected
         ( \? )
+          # From: $(man bash)
+          # If getopts detects an invalid option, it places ? into name and, if not silent, prints
+          # an error message and unsets OPTARG.  If getopts is silent, it assigns the option
+          # character found to OPTARG and does not print a diagnostic message.
+          #   STANDARD:   name=\?, unset OPTARG,  (( OPTERR==1 )) && echo error
+          #   SILENT:     name=\?, OPTARG=name
+
           if (( OPTIND > $# )) ; then
             continue
           fi
@@ -208,16 +225,17 @@ function fictitious() {
           fi
           ;;
 
-      ## Require value missing
-        # From: $(man bash)
-        # If a required argument is not found, and getopts is not silent, it sets the value of
-        # name to a question mark (?), unsets OPTARG, and prints a diagnostic message.  If
-        # getopts is silent, it sets the value of name to a colon (:) and sets OPTARG to the
-        # option character found.
-        #   STANDARD  name=\?, unset OPTARG   ((OPTERR==1 )) && echo error
-        #   SILENT    OPTARG=name, name=:
 
+      ## Require value missing
         ( : )
+          # From: $(man bash)
+          # If a required argument is not found, and getopts is not silent, it sets the value of
+          # name to a question mark (?), unsets OPTARG, and prints a diagnostic message.  If
+          # getopts is silent, it sets the value of name to a colon (:) and sets OPTARG to the
+          # option character found.
+          #   STANDARD  name=\?, unset OPTARG   ((OPTERR==1 )) && echo error
+          #   SILENT    OPTARG=name, name=:
+
           if (( ${OPTERR} != 0 )) ; then 
             echo ${0}: option requires an argument -- \${OPTARG} > /dev/stderr
           fi
@@ -225,6 +243,7 @@ function fictitious() {
           ${TEST} && {
              echo -n "'$OPTARG' <error> "
           }
+
 
           # Insert User Code
 
@@ -244,6 +263,9 @@ function fictitious() {
             echo -n "'-$flag' "
           }
 
+
+          # Insert User Code
+
           ;;
 
       # This option does NOT have a value, but is separated out from the above options
@@ -259,36 +281,40 @@ function fictitious() {
             echo -n "'-${flag}' "
           }
 
+
           # Insert User Code
           #    for case insensitivity (see option "ignore-case" below)
 
           ;;
 
-      # This option MUST have a value, this value could be connected to or follows the option
+      # This option MUST have a value, either connected to or following the option
         ( f )
-          ## Need to check if the value is an option, by our def
-          ## if so, we need execute an error, and put it back
+          ######################################################################
+          # The following code should be provided by the "system" 
+          #
+          # Validate that the required value is not an option by our definition
+          { 
+            if [[ ${OPTARG} == -* ]] ; then
+              echo ${0}: option requires an valid value -${flag}
+              echo ${0}:    ${OPTARG} has been identified as an option
 
-          if [[ ${OPTARG} == -* ]] ; then
-            # this is NOT a valid value
-            echo ${0}: option requires an valid value -${flag}
-            echo ${0}:    ${OPTARG} has been identified as an option
-
-            if (( ${flag_from} != ${arg_from} )) ; then 
-              (( OPTIND -- ))
-               _OPTIND_shadow=${OPTIND}
-            else
-              # recreate the positional parameters, but updating flag_from
-              {
-                local _temp=( $@ )
-                _temp[${arg_from}]="${OPTARG}"
-                set -- ${temp[@]}
-              }
-              :
+              if (( ${flag_from} == ${arg_from} )) ; then 
+                { # Modify ${!arg_from} to be JUST the arg for reconsideration
+                  local _temp=( $@ )
+                  _temp[${arg_from}]="${OPTARG}"
+                  set -- ${temp[@]}
+                }
+              else
+                { # Unconsume the parameter for reconsideration
+                  (( OPTIND -- ))
+                  _OPTIND_shadow=${OPTIND}
+                }
+              fi
+              unset OPTARG
+              continue
             fi
-            unset OPTARG
-            continue
-          fi
+          }
+          ######################################################################
 
           ${ILLUSTRATE} && {
             echo "The option \`-${flag}\` has been identified with the value '${OPTARG}'."
@@ -297,16 +323,25 @@ function fictitious() {
             echo 
           }
 
-          # Insert User Code
-          ${TEST} && {
-            echo -n "'-${flag}' '${OPTARG}' "
+         ${TEST} && {
+            echo -n "'-${flag}' '${OPTARG/#-/\\-}' "
           }
 
+
+          # Insert User Code
+  
           ;;
 
-      ## This option has a required value, but we want it to MAY have a value
-      ## Hence put back the value if it is an option 
+
+      # May require an option, but defined as a required option: "d:"
         ( d )  # "d:"
+          ######################################################################
+          # The following code should be provided by the "system" 
+          #
+          # Validate the associated value is NOT an option
+          # If it is an option, put it back
+
+
           ## Treat as if it is required to have a value
           ## Then put back the value if we need to.
 
@@ -324,12 +359,17 @@ function fictitious() {
           # -d-next    this causes an infinite loop
 
 ## This next could be a problem
-          { # The following code should be provided by the "system" }
-            if [[ ${OPTARG} == -* ]] ; then
-              unset OPTARG
-              (( OPTIND -- ))
-               _OPTIND_shadow=${OPTIND}   ## Potentially move this to the end of the loop
+          { # The following code should be provided by the "system" 
+            if [[ ${flag_from} != ${arg_from} ]] ; then
+
+              ## Need to ensure the next parameter is NOT an option
+              if [[ ${OPTARG} == -* ]] ; then
+                unset OPTARG
+                (( OPTIND -- ))
+                _OPTIND_shadow=${OPTIND}
+             fi
             fi
+            OPTARG=${OPTARG/\\-/-}    # Un-Escape the "-"
           }
 
           ${ILLUSTRATE} && {
@@ -344,15 +384,26 @@ function fictitious() {
             echo
           }
 
-          # Insert User Code
           ${TEST} && {
-            echo -n "'-$flag' '${OPTARG}' "
+            echo -n "'-$flag' '${OPTARG/#-/\\-}' "
           }
+
+
+          # Insert User Code
 
           ;;
 
-      ## This option MAY have a value, but defined as not having one
-        ( t )  # "t"  
+
+      # May require an option, but defined as having no option: "t"
+        ( t ) 
+          ######################################################################
+          # The following code should be provided by the "system" 
+          #
+          # Validate the associated value is NOT an option
+          # If it is an option, put it back
+
+
+
           ## Treat as if doe NOT have a value  <<--
           ## If there is consume the next token
 
@@ -362,7 +413,10 @@ function fictitious() {
           #
           # -t -next -->  then T does not have a value
 
-          { # The following code should be provided by the "system"
+          ######################################################################
+          # The following code should be provided by the "system" 
+          #
+          { 
             local _old_flag_from=${!flag_from}
 
             if [[ ${!flag_from} == *t ]] ; then 
@@ -390,7 +444,9 @@ function fictitious() {
               (( OPTIND ++ ))            
               (( _OPTIND_shadow = OPTIND ))
             fi
+            OPTARG=${OPTARG/\\-/-}    # Un-Escape the "-"
           }
+          ######################################################################
 
           ${ILLUSTRATE} && {
             if [[ -z ${OPTARG:-''} ]] then
@@ -405,8 +461,9 @@ function fictitious() {
           }
          
           ${TEST} && {
-             echo "-${flag}' '${OPTARG}' "
+             echo "-${flag}' '${OPTARG/#-/\\-}' "
           }
+
 
           # Insert User Code
 
@@ -414,27 +471,32 @@ function fictitious() {
 
       ## Manage long-form options via the "--" option
         ( - )
-          [[ -z ${OPTARG} ]] && break                # Special case of "--"
+          ######################################################################
+          # The following code should be provided by the "system" 
+          # 
+          {
+            [[ -z ${OPTARG} ]] && break                # Special case of "--"
 
-          # At this point:
-          #   OPTARG     ==  {banner}[=value]
-          OPTBANNER=${OPTARG/%=*/}                   # strip off: [=value]
-          OPTBANNERIND=$(( OPTIND - 1 ))
+            # At this point:
+            #   OPTARG     ==  {banner}[=value]
+            OPTBANNER=${OPTARG/%=*/}                   # strip off: [=value]
+            OPTBANNERIND=$(( OPTIND - 1 ))
 
-          OPTVALUE=${OPTARG/#*=/}                    # strip off: {banner}= 
-          OPTVALUEIND=$(( OPTIND - 1 ))
-
-
-          # If OPTARG does not contain an equal ('=')
-          # then OPTVALUE is undefined. Hence, unset it
-          [[ ${OPTARG} != *=* ]] && unset OPTVALUE OPTVALUEIND
+            OPTVALUE=${OPTARG/#*=/}                    # strip off: {banner}= 
+            OPTVALUEIND=$(( OPTIND - 1 ))
 
 
-          # Classify the LOOKAHEAD
-          OPTLOOKAHEAD=NON_VALUE
-          (( $OPTIND <= ${#} )) && [[ ${!OPTIND} != -* ]] && \
-            OPTLOOKAHEAD="VALUE"
+            # If OPTARG does not contain an equal ('=')
+            # then OPTVALUE is undefined. Hence, unset it
+            [[ ${OPTARG} != *=* ]] && unset OPTVALUE OPTVALUEIND
 
+
+            # Classify the LOOKAHEAD
+            OPTLOOKAHEAD=NON_VALUE
+            (( $OPTIND <= ${#} )) && [[ ${!OPTIND} != -* ]] && \
+              OPTLOOKAHEAD="VALUE"
+          }
+          ######################################################################
 
           case "${OPTBANNER}" in
             ## This option does NOT have a value
@@ -450,6 +512,7 @@ function fictitious() {
                   echo -n "'--${OPT_BANNER}' "
                 }
 
+
                 # Insert User's Code Here
                 #   e.g., turn case insensitivity (see option "i" above)
 
@@ -458,17 +521,17 @@ function fictitious() {
             ## This option MUST have a value
               ( dir )
 
-                { # The following code should be provided by the "system"
-                  # If the look ahead is VALUE consume it
-
+                #######################################################
+                # The following code should be provided by the "system"
+                # If the look ahead is VALUE consume it
+                {
                   if [[ -z "${OPTVALUE+set}" ]] ; then 
                     # Get the value from the LOOKAHEAD and consume it
                     if [[ ${OPTLOOKAHEAD} == "VALUE" ]] ; then
                       # ADVANCE
                       OPTVALUEIND=${OPTIND}
                       OPTVALUE=${!OPTIND} 
-                      OPTVALUE=${OPTVALUE/\-/-}    # Unescape the "-"
-                      #OPTVALUE=${OPTVALUE/\+/+}   # Unescape the "+"
+                      OPTVALUE=${OPTVALUE/\\-/-}    # Un-Escape the "-"
                       (( OPTIND ++ ))
                     else
                       if (( ${OPTERR} != 0 )) ; then 
@@ -477,16 +540,18 @@ function fictitious() {
                       fi
                     fi
                   fi 
-                }
+                
 
-                if [[ -z "${OPTVALUE+set}" ]] ; then 
-                  # By definition OPTVALUE needs to be defined
-                  # This is here to show what a programmer should do if
-                  # OPTERR != 0
-                  :
-                  echo ${0}: option requires an argument --${OPTBANNER}
-                  break
-                fi
+                  if [[ -z "${OPTVALUE+set}" ]] ; then 
+                    # By definition OPTVALUE needs to be defined
+                    # This is here to show what a programmer should do if
+                    # OPTERR != 0
+                    :
+                    echo ${0}: option requires an argument --${OPTBANNER}
+                    break
+                  fi
+                }
+                #######################################################
 
                 ${ILLUSTRATE} && {
                   echo "The option '--${OPTBANNER}' has been identified with the value '${OPTVALUE}'."
@@ -496,10 +561,12 @@ function fictitious() {
                 }
 
                 ${TEST} && {
-                    echo -n "'--${OPT_BANNER}' '${OPTVALUE}' "
+                    echo -n "'--${OPT_BANNER}' '${OPTVALUE/#-/\\-}' "
                 }
 
+
                 # Insert User's Code Here
+
                 ;;
 
 
@@ -511,8 +578,7 @@ function fictitious() {
                     # ADVANCE 
                     OPTVALUEIND=${OPTIND}
                     OPTVALUE=${!OPTIND} 
-                    OPTVALUE=${OPTVALUE/\-/-}    # Unescape the "-"
-                    #OPTVALUE=${OPTVALUE/\+/+}    # Unescape the "+"
+                    OPTVALUE=${OPTVALUE/\\-/-}    # Unescape the "-"
                     (( OPTIND ++ ))                    
                   fi
                 }
@@ -531,11 +597,12 @@ function fictitious() {
 
                 ${TEST} && {
                   if [[ ! -z ${OPTVALUE+set} ]] ; then
-                    echo -n "'--${OPTBANNER}' '${OPTVALUE}' "
+                    echo -n "'--${OPTBANNER}' '${OPTVALUE/#-/\\-}' "
                   else
                     echo -n "'--${OPTBANNER}' "
                   fi
                 }
+
 
                 # Insert User's Code Here
 
