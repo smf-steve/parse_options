@@ -276,9 +276,7 @@ function fictitious() {
 
           ;;
 
-      ## Option without a value
-      # But is separated out from the above--
-      # ideally, it should be paired with --ignore-case (see below)
+      ## - Option without a required value
         ( i )
           ${ILLUSTRATE} && {
             echo "The option \`-${flag}\` has been identified with no value."
@@ -291,16 +289,18 @@ function fictitious() {
 
 
           # Insert User Code
-          #    for case insensitivity (see option "ignore-case" below)
+          #    This option was separated from similar options to highlight
+          #    It should be paired with --ignore-case (see below)
 
           ;;
 
-      ## Option with a MUST value,
-      # Either connected to (e.g., -f{value} or following the option -f {value}
+      ## -Option with a MUST value: 
         ( f )
           ######################################################################
           # The following code should be provided by the "system"
           #
+          # The required valued should either be connected to -f{value}
+          #     or follow the option -f {value}
           {
             # Validate that a following required value is not an option (our definition)
             #
@@ -309,12 +309,11 @@ function fictitious() {
                 echo ${0}: option requires an valid value -${flag}
                 echo ${0}:    ${OPTARG} has been identified as an option
                 unset OPTARG
-                continue
+                continue   # or break to signify an error
               fi
             fi
           }
           ######################################################################
-
           ${ILLUSTRATE} && {
             echo "The option \`-${flag}\` has been identified with the value '${OPTARG}'."
             echo "    '-${flag}' stems from \${${flag_from}} == '${!flag_from}'."
@@ -331,8 +330,8 @@ function fictitious() {
           ;;
 
 
-      ## Options that MAY require an option, but defined as a required option: "d:"
-        ( d )  # "d:"
+      ## -Option that MAY require a value, but defined as a required value
+        ( d )  # "d::" -> "d:"
           ######################################################################
           # The following code should be provided by the "system"
           #
@@ -370,7 +369,7 @@ function fictitious() {
               fi
             fi
           }
-
+          ######################################################################
           ${ILLUSTRATE} && {
             if [[ -z ${OPTARG:-''} ]] then
               echo "The option '-${flag}' has been identified without a value."
@@ -391,9 +390,8 @@ function fictitious() {
 
           ;;
 
-      ## Option that require an option, but defined as having no option: "t"
-        ( t )
-          #
+      ## -Option that require a value, but defined as having no value:
+        ( t )  # "t::" -> "t"
           ######################################################################
           # The following code should be provided by the "system"
           #
@@ -485,7 +483,9 @@ function fictitious() {
           ######################################################################
 
           case "${OPTBANNER}" in
-            ## This option does NOT have a value
+
+
+            ## --Option that does NOT have a value
               ( ignore-case )
 
                 ${ILLUSTRATE} && {
@@ -503,7 +503,7 @@ function fictitious() {
 
                 ;;
 
-            ## This option MUST have a value
+            ## --Option that MUST have a value
               ( dir )
 
                 #######################################################
@@ -536,7 +536,6 @@ function fictitious() {
                   fi
                 }
                 #######################################################
-
                 ${ILLUSTRATE} && {
                   echo "The option '--${OPTBANNER}' has been identified with the value '${OPTVALUE}'."
                   echo "    '--${OPTBANNER}' stems from \${${OPTBANNERIND}} == '${!OPTBANNERIND}'."
@@ -553,8 +552,9 @@ function fictitious() {
                 ;;
 
 
-             ## This option may have a value
+             ## --Option that MAY have a value
              ( tag )
+                ######################################################################
                 { # The following code should be provided by the "system"
 
                   if [[ -z "${OPTVALUE+set}" ]] && [[ ${OPTLOOKAHEAD} == "VALUE" ]] ; then
@@ -565,7 +565,7 @@ function fictitious() {
                     (( OPTIND ++ ))
                   fi
                 }
-
+                ######################################################################
                 ${ILLUSTRATE} && {
                   if [[ ! -z ${OPTVALUE+set} ]] ; then
                     echo "The option '--${OPTBANNER}' has been identified with the value '${OPTVALUE}'."
@@ -590,8 +590,8 @@ function fictitious() {
 
                 ;;
 
+            ## Invalid options
              ( * )
-                # Invalid option detected
                 (( ${OPTERR} != 0 )) &&
                   echo ${0}: illegal option --${OPTBANNER} > /dev/stderr
                 ;;
