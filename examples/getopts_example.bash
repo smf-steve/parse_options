@@ -114,6 +114,10 @@ fi
 #      * all arguments appear after all options
 #
 #   1. Issues:
+#      * Unification of variable names and usage between short-form and long-form options
+#      * User is required to escape negative numbers used as values
+#      *
+
 # $ ./getopts_example.bash  -f-45
 # fictitious -f-45
 # 
@@ -368,9 +372,10 @@ function fictitious() {
                 unset OPTARG
                 (( OPTIND -- ))
                 _OPTIND_shadow=${OPTIND}
-             fi
+              else
+                OPTARG=${OPTARG/\\-/-}    # Un-Escape the "-"
+              fi
             fi
-            OPTARG=${OPTARG/\\-/-}    # Un-Escape the "-"
           }
 
           ${ILLUSTRATE} && {
@@ -426,26 +431,16 @@ function fictitious() {
               if [[ ${!arg_from} != -* ]] ; then
                 # We have a value
                 OPTARG=${!arg_from}
-                (( OPTIND ++ ))
-                (( _OPTIND_shadow = OPTIND ))
+                OPTARG=${OPTARG/\\-/-}    # Un-Escape the "-"
               fi
             else
               # We something that directly follows the t within the option
               OPTARG=${!flag_from}
               OPTARG=${OPTARG#*t}
               arg_from=${flag_from}
-
-              # recreate the positional parameters, but updating flag_from
-              {
-                local _temp=( $@ )
-                _temp[${flag_from}]="-${flag}"
-                set -- ${temp[@]}
-              }
-
-              (( OPTIND ++ ))
-              (( _OPTIND_shadow = OPTIND ))
             fi
-            OPTARG=${OPTARG/\\-/-}    # Un-Escape the "-"
+            (( OPTIND ++ ))
+            (( _OPTIND_shadow = OPTIND ))
           }
           ######################################################################
 
@@ -619,13 +614,6 @@ function fictitious() {
   done
   shift $(( OPTIND -1 ))
 
-  ${TEST} && {
-    echo -n "-- "
-    for i in "$@" ; do
-      echo -n "'$i' "
-    done
-  }
-
   ${ILLUSTRATE} && {
     if [[ $# == 0 ]] ; then
       echo "There are no remaining arguments to fictitious."
@@ -639,10 +627,12 @@ function fictitious() {
   }
 
   ${TEST} && {
+    echo -n "'--'' "
+    for i in "$@" ; do
+      echo -n "'$i' "
+    done
     echo
   }
-
-
 
   # Step 2: Continue with the processing of `fictitious`
 
