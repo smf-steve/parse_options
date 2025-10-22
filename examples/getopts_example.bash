@@ -111,60 +111,12 @@ fi
 #   1. Notes
 #      * a value can not start with a '-', unless the hyphen is appropriately escaped
 #      * all options appear before the first ending option sentinel
-#      * all arguments appear after all options
+#      * all program arguments appear after all options
 #
 #   1. Issues:
 #      * Unification of variable names and usage between short-form and long-form options
 #      * User is required to escape negative numbers used as values
-#      *
-
-# $ ./getopts_example.bash  -f-45
-# fictitious -f-45
-# 
-# ./getopts_example.bash: option requires an valid value -f
-# ./getopts_example.bash: -45 has been identified as an option
-# There are no remaining arguments to fictitious.
-# 
-#
-# ./getopts_example.bash  -d45 -d-45 -d 45 -d '\-45' -d arg
-# infinite loop
-#
-# $ ./getopts_example.bash  -t45 -t-45 -t 45 -t '\-45' -t arg
-# fictitious -t45 -t-45 -t 45 -t \-45 -t arg
-# 
-# The option '-t' has been identified with the value '45'.
-#     '-t' stems from ${1} == '-t45'
-# ./getopts_example.bash: line 431: !arg_from: unbound variable
-
-# Missing required value:
-#   Need to determine what to do when an option is missing a required value.
-#   E.g.,  --dir --{banner}
-#   
-#   Options:
-#     1. report error and stop.  This is what we currently do
-#     1. report error and set value to ''
-#     1. report error and remove the option
-#
-# Optional argument for short-form options
-#   Review this description and its validity
-#
-#   E.g., short-form option spec:  "xf::"
-#
-#   ./fictitious -xf yes -fhello -xfx   <<-- actual
-#     -f yes   : valid
-#     -fhello  : valid, equivalent to: -f hello
-#     -xfx     : valid --> -f x
-#
-#   If "d"
-#
-#   ./fictitious -xd yes -dhello -xdx   <<- conjecture
-#     -xd yes  --> -d yes    # same process as --dir 
-#     -dhello  --> -d hello  # but getops will return just d
-#                            # need to play with ${OPTIND - 1}
-#                            # two assumptions:
-#                            #  1. h is an option, --> d has not option
-#                            #  1. h is not an option --> d has hell as the option
-#     -xdx                   #  this is the case above where h is an option
+#      * -d <eol>   (could address but then it move ALWAYS required to well maybe/not
 #             
 
 function fictitious() {
@@ -182,7 +134,7 @@ function fictitious() {
   # ${OPTBANNER}
   # ${OPTVALUE}
 
-  local SILENT=""                             # We go into silent mode to have more control
+  local SILENT=":"                             # We go into silent mode to have more control
   local SHORT_OPTIONS="xlif:d:t-:"
   local LONG_OPTIONS="ignore-case,dir:,tag::"
 
@@ -193,17 +145,19 @@ function fictitious() {
   OPTIND=1                            # Set the index of the next parameter to process
   local _OPTIND_shadow=${OPTIND}      # Set a shadow index
 
-  while getopts "${SILENT}${SHORT_OPTIONS}" flag "$@" ; do
+  while echo ${OPTIND} ; getopts "${SILENT}${SHORT_OPTIONS}" flag "$@" ; do
 
     # New variables that may/will appear in final prototype utility
     local OPTFLAG=${flag}
     local OPTBANNER=
     local OPTVALUE=${OPTARG:-''}
 
+
     # These variables are defined solely for the purpose of diagnostic/descriptive output
     local flag_from=$(( _OPTIND_shadow ))
     local arg_from=$(( OPTIND - 1 ))
     _OPTIND_shadow=${OPTIND}
+
 
     case "${flag}" in
 
@@ -248,25 +202,24 @@ function fictitious() {
 
 
           # For our fictitious program, we will only drop in here for the
-          # the "f" and the "d" case only when we are the end of the line.
-
-          # This creates a problem with the way we handle the "d" may, via a required
+          # the "f" and the "d" case when we are the end of the line.
+          #
+          # For the "f" case, the code here is correct.
+          # For the "d" case, we should check if we are at the end of line.
+          #
+          # Doing so, effectively transforms "f" into This creates a problem with the way we handle the "d" may, via a required
           #   <prog> -d {eol}
-          # We drop in here and NOT into the ( d ) case
-
-          if (( ${OPTIND} - 1 == $# )) ; then
-            flag=${OPTARG}
-            OPTARG=''
-          else
-            if (( ${OPTERR} != 0 )) ; then
-              echo ${0}: option requires an argument -- ${OPTARG} > /dev/stderr
-            fi
-            # Nothing related to ${ILLUSTRATIVE}
-            #${TEST} && {
-            #   echo -n "'$OPTARG' {error} "
-            #}
-            continue
+          # 
+          # Possible programming solutions are just workarounds
+          #
+          # This highlights either
+          #   1) the limitation of getopts
+          #   2) the implementation approach of "( d )" as a MAY but defined as required
+          #
+          if (( ${OPTERR} != 0 )) ; then
+            echo ${0}: option requires an argument -- ${OPTARG} > /dev/stderr
           fi
+
           ;;
 
 
@@ -309,10 +262,14 @@ function fictitious() {
           ######################################################################
           # The following code should be provided by the "system"
           #
-          # The required valued should either be connected to -f{value}
-          #     or follow the option -f {value}
-          # -f <eol>   -->  STANDARD mode: caught by "\?"
-          #            -->  SILENT mode: caught be ":"
+          # If the required value is in a separate parameter,
+          # which is an option---then its an error.
+          #
+          #  -f -{next}  that is to say $OPTARG == -{next} 
+          #
+          # Note that in the case of  "-f <eol>"
+          #   within STANDARD mode: case is caught by "\?"
+          #   within SILENT mode:   case is caught be ":"
           {
             # Validate that a following required value is not an option (our definition)
             #
@@ -343,44 +300,33 @@ function fictitious() {
           ;;
 
 
-      ## -Option that MAY require a value, but defined as a required value
-        ( d )  # "d::" -> "d:"
+      ## -Option that MAY require a value, but defined as DOES require a value
+        ( d )  # "d::" <- "d:"
           ######################################################################
           # The following code should be provided by the "system"
           #
-          # Validate the "required" value is NOT an option
-          # If it is an option, put it back
+          # -d{value}    --> leave it alone
+          # -d-{value}   --> leave it alone
+          # -d -{option} --> put -{option} back
+          # -d {value}   --> leave it along, un-escape the "-"
+          # -d <EOL>     --> ISSUE
+          #
+          # Note that in the case of "-d <eol>"
+          #   within STANDARD mode: this case is caught by "\?"
+          #   within SILENT mode:   this case is caught be ":"
+          # But we can't be effectively handled so it is left as a noted issue
 
-          # Issue: if -d is the last parameter.
-          #        - An error message will be generated by getopts
-          #        - Require the insertion of "--"
-
-          # -d <eol>   -->  STANDARD mode: caught by "\?"
-          #            -->  SILENT mode: caught be ":"
-          # -d -{next} -->  $OPTARG == -{next} $OPTARG needs to be put back, (( OPTIND -- ))
-
-          # -d{value}  -->  $OPTARG == "value"
-          # -d {value} -->  $OPTARG == "value"
-
-echo here
           { # The following code should be provided by the "system"
-#            if  (( OPTIND < ${#} )) ; then
-              if [[ ${flag_from} != ${arg_from} ]] ; then
-
-                ## Need to ensure the next parameter is NOT an option
-                if [[ ${OPTARG} == -* ]] ; then
-                  unset OPTARG
-                  (( OPTIND -- ))
-                  _OPTIND_shadow=${OPTIND}
-                else
-                  OPTARG=${OPTARG/\\-/-}    # Un-Escape the "-"
-                fi
+            if [[ ${flag_from} != ${arg_from} ]] ; then
+              ## Need to ensure the next parameter is NOT an option
+              if [[ ${OPTARG} == -* ]] ; then
+                unset OPTARG
+                (( OPTIND -- ))
+                _OPTIND_shadow=${OPTIND}
+              else
+                OPTARG=${OPTARG/\\-/-}    # Un-Escape the "-"
               fi
-#            else
-#              unset OPTARG
-#              (( OPTIND -- ))
-#              _OPTIND_shadow=${OPTIND}
-#            fi
+            fi
           }
           ######################################################################
           ${ILLUSTRATE} && {
@@ -403,46 +349,41 @@ echo here
 
           ;;
 
-      ## -Option that require a value, but defined as having no value:
-        ( t )  # "t::" -> "t"
+      ## -Option that MAY require a value, but defined as having NO value:
+        ( t )  # "t::" <- "t"
           ######################################################################
           # The following code should be provided by the "system"
           #
-          # Validate the associated value is NOT an option
-          # If it is an option, put it back
-
-
-
-          ## Treat as if doe NOT have a value  <<--
-          ## If there is consume the next token
-
-          # -tvalue  -->  make OPTARG="value"
-          # -tv      -->  what if v is a flag, so what it is deemed a value
-          # -t value -->  make OPTARG="value"
+          # -t{value}    --> make OPTARG="value"   ; Consume current parameter
+          # -t-{value}   --> make OPTARG="-value"  ; Consume current parameter
           #
-          # -t -next -->  then T does not have a value
-
-          ######################################################################
-          # The following code should be provided by the "system"
-          #
+          # -t <EOL>     --> leave it alone
+          # -t -{option} --> leave it alone
+          # -t {value}   --> make OPTARG={value}   ; Consume next parameter, un-escape "-"
           {
+
             local _old_flag_from=${!flag_from}
 
-            if [[ ${!flag_from} == *t ]] ; then
-              # We are at the end of the option list
-              (( arg_from = arg_from + 1 ))
-              if [[ ${!arg_from} != -* ]] ; then
-                # We have a value
-                OPTARG=${!arg_from}
-                OPTARG=${OPTARG/\\-/-}    # Un-Escape the "-"
-              fi
-            else
-              # We something that directly follows the t within the option
+            # The value is connected to the option
+            if [[ ${!flag_from} != *t ]] ; then
               OPTARG=${!flag_from}
               OPTARG=${OPTARG#*t}
               arg_from=${flag_from}
+              (( OPTIND = OPTIND + ${#OPTARG} + 1 ))
             fi
-            (( OPTIND ++ ))
+
+            # The value is a separate word or EOL
+            if [[ ${!flag_from} == *t ]] ; then
+              (( arg_from = arg_from + 1 ))
+              if [[ ${flag_from} == ${#} ]] || [[ ${!arg_from} == -* ]] ; then
+                # Leave it alone
+                :
+              else
+                OPTARG=${!arg_from}
+                (( OPTIND ++ ))
+                OPTARG=${OPTARG/\\-/-}    # Un-Escape the "-"
+              fi
+            fi
             (( _OPTIND_shadow = OPTIND ))
           }
           ######################################################################
@@ -460,7 +401,6 @@ echo here
           ${TEST} && {
              echo "-${flag}' '${OPTARG/#-/\\-}' "
           }
-
 
           # Insert User Code
 
@@ -610,6 +550,11 @@ echo here
                 ;;
           esac
           ;;
+    ## Invalid options
+     ( * )
+      (( ${OPTERR} != 0 )) &&
+        echo ${0}: illegal option --${OPTBANNER} > /dev/stderr
+      ;;
     esac
   done
   shift $(( OPTIND -1 ))
