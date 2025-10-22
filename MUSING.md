@@ -301,6 +301,23 @@ As of
 
 
 # Thoughts:
+  1. Use of ;;& and ;& seems not to work.  But it does, the issue I had
+     is in my use case, I want to redefine the value of name.  It appears
+     the name is captured read-only value. I.e., any change to name affects
+     only the code within the case arms but not the testing of each case pattern
+       - write some code to test this out
+       - options to work around
+         - restructure the code so that : is followed by next arm you want to address the issue -- this might not be possible in my case here
+         - others?
+         
+  1. It appears the short-form options and long-form options with 1 char are treated as different things
+     - should they be unified
+     - perform some tests to validate
+
+  1. what to do with reporting an error if a required value is missing its
+     required value;;  
+     - currently:  '-l' {error} 
+
   1. We have a rule that states that all options start with a hyphen (-), which differs from getopts/getopts
      - one issue is options with optional values, in which said value can be a negative number.  (We can also include explicit positive numbers, i.e., +45.)
      - to address this, the lookahead of a option can be used identify that -45 should be a value and not an option.
