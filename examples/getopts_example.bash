@@ -182,7 +182,7 @@ function fictitious() {
   # ${OPTBANNER}
   # ${OPTVALUE}
 
-  local SILENT=""                             # We go into silent mode to have more control
+  local SILENT=":"                             # We go into silent mode to have more control
   local SHORT_OPTIONS="xlif:d:t-:"
   local LONG_OPTIONS="ignore-case,dir:,tag::"
 
@@ -200,14 +200,14 @@ function fictitious() {
     local OPTBANNER=
     local OPTVALUE=${OPTARG:-''}
 
-    # These variables are defined sole for the purpose of diagnostic/descriptive output
+    # These variables are defined solely for the purpose of diagnostic/descriptive output
     local flag_from=$(( _OPTIND_shadow ))
     local arg_from=$(( OPTIND - 1 ))
     _OPTIND_shadow=${OPTIND}
 
     case "${flag}" in
 
-      ## Invalid option detected
+      ## ERROR: Invalid option detected
         ( \? )
           # From: $(man bash)
           # If getopts detects an invalid option, it places ? into name and, if not silent, prints
@@ -216,8 +216,8 @@ function fictitious() {
           #   STANDARD:   name=\?, unset OPTARG,  (( OPTERR==1 )) && echo error
           #   SILENT:     name=\?, OPTARG=name
 
-          if (( OPTIND > $# )) ; then
-            continue
+          if (( OPTIND > $# )) ; then  ## Why is this NEEDED?
+            continue   # break?
           fi
 
           local _option=${flag}
@@ -228,10 +228,15 @@ function fictitious() {
           if (( ${OPTERR} != 0 )) ; then
             echo ${0}: ---- illegal option -- ${_option} > /dev/stderr
           fi
+          # Nothing related to ${ILLUSTRATE} nor ${TEST}
+
+
+          # Insert User Code
+
           ;;
 
 
-      ## Require value missing
+      ## ERROR: Required value is missing
         ( : )
           # From: $(man bash)
           # If a required argument is not found, and getopts is not silent, it sets the value of
@@ -244,9 +249,9 @@ function fictitious() {
           if (( ${OPTERR} != 0 )) ; then
             echo ${0}: option requires an argument -- \${OPTARG} > /dev/stderr
           fi
-
+          # Nothing related to ${ILLUSTRATIVE}
           ${TEST} && {
-             echo -n "'$OPTARG' <error> "
+             echo -n "'$OPTARG' {error} "
           }
 
 
@@ -255,15 +260,13 @@ function fictitious() {
           ;;
 
 
-      # These options do NOT have a value
+      ## Options without a value
         ( x | l )
           ${ILLUSTRATE} && {
             echo "The option '-${flag}' has been identified with no value."
             echo "    '-${flag}' stems from \${${flag_from}} == '${!flag_from}'."
             echo
           }
-
-          # Insert User Code
           ${TEST} && {
             echo -n "'-$flag' "
           }
@@ -273,15 +276,15 @@ function fictitious() {
 
           ;;
 
-      # This option does NOT have a value, but is separated out from the above options
-      # ideally, it should be paired with --ignore-case
+      ## Option without a value
+      # But is separated out from the above--
+      # ideally, it should be paired with --ignore-case (see below)
         ( i )
           ${ILLUSTRATE} && {
             echo "The option \`-${flag}\` has been identified with no value."
             echo "    \`-${flag}' stems from \${${flag_from}} == '${!flag_from}'."
             echo
           }
-
           ${TEST} && {
             echo -n "'-${flag}' "
           }
@@ -292,31 +295,22 @@ function fictitious() {
 
           ;;
 
-      # This option MUST have a value, either connected to or following the option
+      ## Option with a MUST value,
+      # Either connected to (e.g., -f{value} or following the option -f {value}
         ( f )
           ######################################################################
           # The following code should be provided by the "system"
           #
-          # Validate that the required value is not an option by our definition
           {
-            if [[ ${OPTARG} == -* ]] ; then
-              echo ${0}: option requires an valid value -${flag}
-              echo ${0}:    ${OPTARG} has been identified as an option
-
-              if (( ${flag_from} == ${arg_from} )) ; then
-                { # Modify ${!arg_from} to be JUST the arg for reconsideration
-                  local _temp=( $@ )
-                  _temp[${arg_from}]="${OPTARG}"
-                  set -- ${temp[@]}
-                }
-              else
-                { # Unconsume the parameter for reconsideration
-                  (( OPTIND -- ))
-                  _OPTIND_shadow=${OPTIND}
-                }
+            # Validate that a following required value is not an option (our definition)
+            #
+            if [[ ${flag_from} != ${arg_from} ]] ; then
+              if [[ ${OPTARG} == -* ]] ; then
+                echo ${0}: option requires an valid value -${flag}
+                echo ${0}:    ${OPTARG} has been identified as an option
+                unset OPTARG
+                continue
               fi
-              unset OPTARG
-              continue
             fi
           }
           ######################################################################
@@ -327,8 +321,7 @@ function fictitious() {
             echo "    '${OPTARG}' stems from \${${arg_from}} == '${!arg_from}'."
             echo
           }
-
-         ${TEST} && {
+          ${TEST} && {
             echo -n "'-${flag}' '${OPTARG/#-/\\-}' "
           }
 
@@ -338,7 +331,7 @@ function fictitious() {
           ;;
 
 
-      # May require an option, but defined as a required option: "d:"
+      ## Options that MAY require an option, but defined as a required option: "d:"
         ( d )  # "d:"
           ######################################################################
           # The following code should be provided by the "system"
@@ -389,7 +382,6 @@ function fictitious() {
             fi
             echo
           }
-
           ${TEST} && {
             echo -n "'-$flag' '${OPTARG/#-/\\-}' "
           }
@@ -399,9 +391,9 @@ function fictitious() {
 
           ;;
 
-
-      # May require an option, but defined as having no option: "t"
+      ## Option that require an option, but defined as having no option: "t"
         ( t )
+          #
           ######################################################################
           # The following code should be provided by the "system"
           #
@@ -443,7 +435,6 @@ function fictitious() {
             (( _OPTIND_shadow = OPTIND ))
           }
           ######################################################################
-
           ${ILLUSTRATE} && {
             if [[ -z ${OPTARG:-''} ]] then
             echo "The option '-${flag}' has been identified without a value."
@@ -455,7 +446,6 @@ function fictitious() {
             fi
             echo
           }
-
           ${TEST} && {
              echo "-${flag}' '${OPTARG/#-/\\-}' "
           }
@@ -465,7 +455,7 @@ function fictitious() {
 
           ;;
 
-      ## Manage long-form options via the "--" option
+      ## Manage long-form options via the "--" prefix
         ( - )
           ######################################################################
           # The following code should be provided by the "system"
@@ -503,7 +493,6 @@ function fictitious() {
                   echo "    '--${OPTBANNER}' stems from \${${OPTBANNERIND}}."
                   echo
                 }
-
                 ${TEST} && {
                   echo -n "'--${OPT_BANNER}' "
                 }
@@ -554,7 +543,6 @@ function fictitious() {
                   echo "    '${OPTVALUE}' stems from \${${OPTVALUEIND}} == '${!OPTVALUEIND}'."
                   echo
                 }
-
                 ${TEST} && {
                     echo -n "'--${OPT_BANNER}' '${OPTVALUE/#-/\\-}' "
                 }
@@ -589,7 +577,6 @@ function fictitious() {
                   fi
                   echo
                 }
-
                 ${TEST} && {
                   if [[ ! -z ${OPTVALUE+set} ]] ; then
                     echo -n "'--${OPTBANNER}' '${OPTVALUE/#-/\\-}' "
@@ -625,7 +612,6 @@ function fictitious() {
     fi
     echo
   }
-
   ${TEST} && {
     echo -n "'--'' "
     for i in "$@" ; do
