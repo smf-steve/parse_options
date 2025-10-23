@@ -425,4 +425,52 @@ $ getopt -o "-t:" -a -l "tag:" -- --tag -tag hello --tag=hello -t=hello -t hello
          | --debug N    |   N   |
          | --debug=''   |   ''  |
 
+1. getopts special variable is very special
+   1. getopts has an internal variable that is used to manage condensed options
+   1. the variable OPTIND is monitored to determined if the value is updated
+      - said update is NOT related to a change in value
+      - the change of value could be OPTIND=${OPTIND}
+   ```bash
+   set -- -abcd -abcd -abcd -abcd
+   OPTIND=1
+   for (( OPTIND=1, x=1; x <= 10; x++ )) ; do
+     getopts :abcd flag
+     echo $flag '; ' $OPTIND
+
+     OPTIND=${OPTIND}
+   done
+   ```
+   ```
+   a ;  1
+   a ;  1
+   a ;  1
+   a ;  1
+   a ;  1
+   a ;  1
+   ```
+   ```bash
+   set -- -abcd -abcd -abcd -abcd
+   OPTIND=1
+   for (( OPTIND=1, x=1; x <= 10; x++ )) ; do
+   
+     getopts :abcd flag
+     echo $flag '; ' $OPTIND
+   
+     # OPTIND=${OPTIND}
+   done
+   ```
+   ```
+   a ;  1
+   b ;  1
+   c ;  1
+   d ;  2
+   a ;  2
+   b ;  2
+   c ;  2
+   d ;  3
+   a ;  3
+   b ;  3
+   ```
+
+
 
