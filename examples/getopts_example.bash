@@ -145,7 +145,7 @@ function fictitious() {
   OPTIND=1                            # Set the index of the next parameter to process
   local _OPTIND_shadow=${OPTIND}      # Set a shadow index
 
-  while echo ${OPTIND} ; getopts "${SILENT}${SHORT_OPTIONS}" flag "$@" ; do
+  while getopts "${SILENT}${SHORT_OPTIONS}" flag "$@" ; do
 
     # New variables that may/will appear in final prototype utility
     local OPTFLAG=${flag}
@@ -242,7 +242,7 @@ function fictitious() {
       ## - Option without a required value
         ( i )
           ${ILLUSTRATE} && {
-            echo "The option \`-${flag}\` has been identified with no value."
+            echo "The option '-${flag}' has been identified with no value."
             echo "    \`-${flag}' stems from \${${flag_from}} == '${!flag_from}'."
             echo
           }
@@ -285,7 +285,7 @@ function fictitious() {
           }
           ######################################################################
           ${ILLUSTRATE} && {
-            echo "The option \`-${flag}\` has been identified with the value '${OPTARG}'."
+            echo "The option '-${flag}' has been identified with the required value '${OPTARG}'."
             echo "    '-${flag}' stems from \${${flag_from}} == '${!flag_from}'."
             echo "    '${OPTARG}' stems from \${${arg_from}} == '${!arg_from}'."
             echo
@@ -331,10 +331,10 @@ function fictitious() {
           ######################################################################
           ${ILLUSTRATE} && {
             if [[ -z ${OPTARG:-''} ]] then
-              echo "The option '-${flag}' has been identified without a value."
+              echo "The option '-${flag}' has been identified without an optional value."
               echo "    '-${flag}' stems from \${${flag_from}} == '${!flag_from}'"
             else
-              echo "The option '-${flag}' has been identified with the value '${OPTARG}'".
+              echo "The option '-${flag}' has been identified with the optional value '${OPTARG}'".
               echo "    '-${flag}' stems from \${$((flag_from))} == '${!flag_from}'"
               echo "    '${OPTARG}' stems from \${${arg_from}} == '${!arg_from}'."
             fi
@@ -370,6 +370,11 @@ function fictitious() {
               OPTARG=${OPTARG#*t}
               arg_from=${flag_from}
               (( OPTIND = OPTIND + ${#OPTARG} + 1 ))
+              {
+                local temp=( $@ )
+                temp[${OPTIND}]="${!flag_from%%t*}t"
+                set -- ${temp}
+              }
             fi
 
             # The value is a separate word or EOL
@@ -389,10 +394,10 @@ function fictitious() {
           ######################################################################
           ${ILLUSTRATE} && {
             if [[ -z ${OPTARG:-''} ]] then
-            echo "The option '-${flag}' has been identified without a value."
+            echo "The option '-${flag}' has been identified without an optional value."
             echo "    '-${flag}' stems from \${${flag_from}} == '${!flag_from}'"
             else
-              echo "The option '-${flag}' has been identified with the value '${OPTARG}'".
+              echo "The option '-${flag}' has been identified with the optional value '${OPTARG}'".
               echo "    '-${flag}' stems from \${$((flag_from))} == '${_old_flag_from}'"
               echo "    '${OPTARG}' stems from \${${arg_from}} == '${!arg_from}'."
             fi
@@ -442,7 +447,7 @@ function fictitious() {
               ( ignore-case )
 
                 ${ILLUSTRATE} && {
-                  echo "The option '--${OPTBANNER}' has been identified."
+                  echo "The option '--${OPTBANNER}' has been identified with no value."
                   echo "    '--${OPTBANNER}' stems from \${${OPTBANNERIND}} == '${!OPTBANNERIND}'."
                   echo
                 }
@@ -490,7 +495,7 @@ function fictitious() {
                 }
                 #######################################################
                 ${ILLUSTRATE} && {
-                  echo "The option '--${OPTBANNER}' has been identified with the value '${OPTVALUE}'."
+                  echo "The option '--${OPTBANNER}' has been identified with the required value '${OPTVALUE}'."
                   echo "    '--${OPTBANNER}' stems from \${${OPTBANNERIND}} == '${!OPTBANNERIND}'."
                   echo "    '${OPTVALUE}' stems from \${${OPTVALUEIND}} == '${!OPTVALUEIND}'."
                   echo
@@ -521,11 +526,11 @@ function fictitious() {
                 ######################################################################
                 ${ILLUSTRATE} && {
                   if [[ ! -z ${OPTVALUE+set} ]] ; then
-                    echo "The option '--${OPTBANNER}' has been identified with the value '${OPTVALUE}'."
+                    echo "The option '--${OPTBANNER}' has been identified with the optional value '${OPTVALUE}'."
                     echo "    '--${OPTBANNER}' stems from \${${OPTBANNERIND}} == '${!OPTBANNERIND}'."
                     echo "    '${OPTVALUE}' stems from \${${OPTVALUEIND}} == '${!OPTVALUEIND}'."
                   else
-                    echo "The option '--${OPTBANNER}' has been identified without a value."
+                    echo "The option '--${OPTBANNER}' has been identified without an optional value."
                     echo "    '--${OPTBANNER}' stems from \${${OPTBANNERIND}} == '${!OPTBANNERIND}'."
                   fi
                   echo
@@ -571,7 +576,7 @@ function fictitious() {
     echo
   }
   ${TEST} && {
-    echo -n "'--'' "
+    echo -n "'--' "
     for i in "$@" ; do
       echo -n "'$i' "
     done
