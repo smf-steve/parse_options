@@ -114,10 +114,8 @@ fi
 #      * all program arguments appear after all options
 #
 #   1. Issues:
-#      * Unification of variable names and usage between short-form and long-form options
 #      * User is required to escape negative numbers used as values
-#      * -d <eol>   (could address but then it move ALWAYS required to well maybe/not
-#             
+
 
 function fictitious() {
   # Usage: fictitious [options] [--] arg1 arg2
@@ -135,7 +133,7 @@ function fictitious() {
   # ${OPTVALUE}
 
   local SILENT=":"                             # We go into silent mode to have more control
-  local SHORT_OPTIONS="xlif:d:t-:"
+  local SHORT_OPTIONS="${SILENT}xlif:d:t-:"
   local LONG_OPTIONS="ignore-case,dir:,tag::"
 
 
@@ -200,26 +198,58 @@ function fictitious() {
           #   STANDARD  name=\?, unset OPTARG   ((OPTERR==1 )) && echo error
           #   SILENT    OPTARG=name, name=:
 
+          # ALTHOUGH it says what it says in the man page, OPTARG is NOT
+          # being set!
+          #   $ bash --version
+          #   GNU bash, version 5.3.3(1)-release (aarch64-apple-darwin24.4.0)
 
-          # For our fictitious program, we will only drop in here for the
-          # the "f" and the "d" case when we are the end of the line.
+          # A workaround to this problem has been implemented below.
+
+          # For our fictitious program, we will only drop in here under
+          # two cases:
+          #   1. for the "f" case where a value is required
+          #   2. for the "d" case when we are at the end of line.
           #
-          # For the "f" case, the code here is correct.
-          # For the "d" case, we should check if we are at the end of line.
-          #
-          # Doing so, effectively transforms "f" into This creates a problem with the way we handle the "d" may, via a required
-          #   <prog> -d {eol}
-          # 
-          # Possible programming solutions are just workarounds
-          #
-          # This highlights either
-          #   1) the limitation of getopts
-          #   2) the implementation approach of "( d )" as a MAY but defined as required
-          #
-          if (( ${OPTERR} != 0 )) ; then
-            echo ${0}: option requires an argument -- ${OPTARG} > /dev/stderr
+          # It does, however, highlight the problems associated with
+          # the implementation of the "d" option.  Recall the "d" option,
+          # is an option that has an optional value but implemented as
+          # requiring a value.
+
+          # OPTARG is not being set as specified by the man page
+          OPTARG=$(( OPTIND - 1 ))
+          OPTARG=${!OPTARG}
+          OPTARG=${OPTARG: -1}
+
+          if [[ ${OPTIND} > ${#} ]] ; then
+            case ${OPTARG} in
+              # Create an arm for each and every option that
+              #   1. has an optional value, and
+              #   2. implemented as HAVING an argument
+              ( d )
+                ${ILLUSTRATE} && {
+                  echo "The option '-${OPTARG}' has been identified without an optional value."
+                  echo "    '-${OPTARG}' stems from \${${flag_from}} == '${!flag_from}'"
+                  echo
+                }
+                ${TEST} && {
+                   echo -n "'-$flag' "
+                }
+
+                # DUPLICATE users code here
+
+                ;;
+
+               ( * )
+                 if (( ${OPTERR} != 0 )) ; then
+                   echo ${0}: option requires an argument -- ${OPTARG} > /dev/stderr
+                 fi
+                ;;
+            esac
+          else
+            if (( ${OPTERR} != 0 )) ; then
+              echo ${0}: option requires an argument -- ${OPTARG} > /dev/stderr
+            fi
           fi
-
           ;;
 
 
@@ -309,12 +339,11 @@ function fictitious() {
           # -d-{value}   --> leave it alone
           # -d -{option} --> put -{option} back
           # -d {value}   --> leave it along, un-escape the "-"
-          # -d <EOL>     --> ISSUE
+          # -d <EOL>     --> see ( : ) case arm above
           #
           # Note that in the case of "-d <eol>"
           #   within STANDARD mode: this case is caught by "\?"
           #   within SILENT mode:   this case is caught be ":"
-          # But we can't be effectively handled so it is left as a noted issue
 
           { # The following code should be provided by the "system"
             if [[ ${flag_from} != ${arg_from} ]] ; then
@@ -361,7 +390,6 @@ function fictitious() {
           # -t -{option} --> leave it alone
           # -t {value}   --> make OPTARG={value}   ; Consume next parameter, un-escape "-"
           {
-
             local _old_flag_from=${!flag_from}
 
             # The value is connected to the option
@@ -369,16 +397,14 @@ function fictitious() {
               OPTARG=${!flag_from}
               OPTARG=${OPTARG#*t}
               arg_from=${flag_from}
-              (( OPTIND = OPTIND + ${#OPTARG} + 1 ))
               {
                 local temp=( $@ )
-                temp[${OPTIND}]="${!flag_from%%t*}t"
-                set -- ${temp}
+                temp[OPTIND - 1]="${!flag_from%%t*}t"
+                set -- ${temp[@]}
               }
-            fi
-
-            # The value is a separate word or EOL
-            if [[ ${!flag_from} == *t ]] ; then
+              (( OPTIND ++ ))
+            else
+              # The value is a separate word or EOL
               (( arg_from = arg_from + 1 ))
               if [[ ${flag_from} == ${#} ]] || [[ ${!arg_from} == -* ]] ; then
                 # Leave it alone
@@ -427,11 +453,9 @@ function fictitious() {
             OPTVALUE=${OPTARG/#*=/}                    # strip off: {banner}=
             OPTVALUEIND=$(( OPTIND - 1 ))
 
-
             # If OPTARG does not contain an equal ('=')
             # then OPTVALUE is undefined. Hence, unset it
             [[ ${OPTARG} != *=* ]] && unset OPTVALUE OPTVALUEIND
-
 
             # Classify the LOOKAHEAD
             OPTLOOKAHEAD=NON_VALUE
@@ -441,7 +465,6 @@ function fictitious() {
           ######################################################################
 
           case "${OPTBANNER}" in
-
 
             ## --Option that does NOT have a value
               ( ignore-case )
@@ -463,7 +486,6 @@ function fictitious() {
 
             ## --Option that MUST have a value
               ( dir )
-
                 #######################################################
                 # The following code should be provided by the "system"
                 # If the look ahead is VALUE consume it
@@ -592,9 +614,6 @@ function fictitious() {
 
 ## Main:
 
-if [[ "$#" == 0 ]] ; then
-  set -- --dir --dir=/usr/bin  --dir /local/sbin -d arg1 arg2
-fi
 ${ILLUSTRATE} && {
   echo fictitious "$@"
   echo
