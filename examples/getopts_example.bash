@@ -138,12 +138,12 @@ function fictitious() {
 
 
   # Set the Position Parameters to the Current Positional Parameters
-  set -- "$@"    # This step is superfluous, but illustrative
+  set -- "$@"                         # This step is superfluous, but illustrative
 
   OPTIND=1                            # Set the index of the next parameter to process
   local _OPTIND_shadow=${OPTIND}      # Set a shadow index
 
-  while getopts "${SILENT}${SHORT_OPTIONS}" flag "$@" ; do
+  while getopts "${SILENT}${SHORT_OPTIONS}" flag "${@}" ; do
 
     # New variables that may/will appear in final prototype utility
     local OPTFLAG=${flag}
@@ -167,10 +167,6 @@ function fictitious() {
           # character found to OPTARG and does not print a diagnostic message.
           #   STANDARD:   name=\?, unset OPTARG,  (( OPTERR==1 )) && echo error
           #   SILENT:     name=\?, OPTARG=name
-
-          if (( OPTIND > $# )) ; then  ## Why is this NEEDED?
-            continue   # break?
-          fi
 
           local _option=${flag}
           if [[ -n "${OPTARG+set}" ]] ; then
@@ -232,7 +228,7 @@ function fictitious() {
                   echo
                 }
                 ${TEST} && {
-                   echo -n "'-$flag' "
+                   echo -n "'-${OPTARG}' "
                 }
 
                 # DUPLICATE users code here
@@ -261,7 +257,7 @@ function fictitious() {
             echo
           }
           ${TEST} && {
-            echo -n "'-$flag' "
+            echo -n "'-${flag}' "
           }
 
 
@@ -370,7 +366,11 @@ function fictitious() {
             echo
           }
           ${TEST} && {
-            echo -n "'-$flag' '${OPTARG/#-/\\-}' "
+            if [[ -z ${OPTARG:-''} ]] then
+              echo -n "'-${flag}' "
+            else
+              echo -n "'-${flag}' '${OPTARG/#-/\\-}' "
+            fi
           }
 
 
@@ -398,7 +398,7 @@ function fictitious() {
               OPTARG=${OPTARG#*t}
               arg_from=${flag_from}
               {
-                local temp=( $@ )
+                local temp=( ${@} )
                 temp[OPTIND - 1]="${!flag_from%%t*}t"
                 set -- ${temp[@]}
               }
@@ -430,7 +430,11 @@ function fictitious() {
             echo
           }
           ${TEST} && {
-             echo "-${flag}' '${OPTARG/#-/\\-}' "
+            if [[ -z ${OPTARG:-''} ]] then
+              echo "-${flag}' "
+            else
+              echo "-${flag}' '${OPTARG/#-/\\-}' "
+            fi
           }
 
           # Insert User Code
@@ -459,7 +463,7 @@ function fictitious() {
 
             # Classify the LOOKAHEAD
             OPTLOOKAHEAD=NON_VALUE
-            (( $OPTIND <= ${#} )) && [[ ${!OPTIND} != -* ]] && \
+            (( ${OPTIND} <= ${#} )) && [[ ${!OPTIND} != -* ]] && \
               OPTLOOKAHEAD="VALUE"
           }
           ######################################################################
@@ -475,7 +479,7 @@ function fictitious() {
                   echo
                 }
                 ${TEST} && {
-                  echo -n "'--${OPT_BANNER}' "
+                  echo -n "'--${OPTBANNER}' "
                 }
 
 
@@ -523,7 +527,7 @@ function fictitious() {
                   echo
                 }
                 ${TEST} && {
-                    echo -n "'--${OPT_BANNER}' '${OPTVALUE/#-/\\-}' "
+                    echo -n "'--${OPTBANNER}' '${OPTVALUE/#-/\\-}' "
                 }
 
 
@@ -587,20 +591,20 @@ function fictitious() {
   shift $(( OPTIND -1 ))
 
   ${ILLUSTRATE} && {
-    if [[ $# == 0 ]] ; then
+    if [[ ${#} == 0 ]] ; then
       echo "There are no remaining arguments to fictitious."
     else
       echo -n "The arguments to fictitious are: "
-      for i in "$@" ; do
-         echo -n "'$i' "
+      for i in "${@}" ; do
+         echo -n "'${i}' "
       done
     fi
     echo
   }
   ${TEST} && {
     echo -n "'--' "
-    for i in "$@" ; do
-      echo -n "'$i' "
+    for i in "${@}" ; do
+      echo -n "'${i}' "
     done
     echo
   }
@@ -615,10 +619,10 @@ function fictitious() {
 ## Main:
 
 ${ILLUSTRATE} && {
-  echo fictitious "$@"
+  echo fictitious "${@}"
   echo
 }
-fictitious "$@"
+fictitious "${@}"
 
 
 
