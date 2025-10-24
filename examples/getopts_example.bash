@@ -138,7 +138,7 @@ function fictitious() {
 
 
   # Set the Position Parameters to the Current Positional Parameters
-  set -- "$@"                         # This step is superfluous, but illustrative
+  set -- "${@}"                       # This step is superfluous, but illustrative
 
   OPTIND=1                            # Set the index of the next parameter to process
   local _OPTIND_shadow=${OPTIND}      # Set a shadow index
@@ -367,7 +367,7 @@ function fictitious() {
           }
           ${TEST} && {
             if [[ -z ${OPTARG:-''} ]] then
-              echo -n "'-${flag}' "
+              echo -n "'-${flag}' '' "
             else
               echo -n "'-${flag}' '${OPTARG/#-/\\-}' "
             fi
@@ -431,7 +431,7 @@ function fictitious() {
           }
           ${TEST} && {
             if [[ -z ${OPTARG:-''} ]] then
-              echo -n "-${flag}' "
+              echo -n "-${flag}' '' "
             else
               echo -n "-${flag}' '${OPTARG/#-/\\-}' "
             fi
