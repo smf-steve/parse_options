@@ -6,16 +6,30 @@ akin to notes taken during a class lecture as to opposed to well structured thou
 
 Over time, these musing should be transformed more into use notes.
 
-As of 
+# Completed
+  1. Musing to determine getopts/getopt and a possible new utility
+     - more musing to come
+  1. A new definition of the lexicographical form of an option
+     1. all options begin with a hyphen
+     1. all values can not begin with a (unescaped) hyphen
+     1. options can have represented as
+        - short-form
+        - condensed short-form
+        - long-form
+  1. implementation of a fictitious function, within getopts_example.bash, 
+     that illustrates the handling of these options using bash's builtin
+     `getopts` command
+
+
+
 
 # Next Steps/Work
   1. muse some more
-  1. finish working on fictitious, an exemplar for using getopts
   1. create a version of fictitious, as an exemplar for using getopt
   1. reframe parse_option to be self_example.bash
      - use lessons learns to couch the program similar to the use of getopts/getopt
   1. create TBD specification for man git
-  -
+     - ...
   1. Of course continually cleanup and document
 
 
