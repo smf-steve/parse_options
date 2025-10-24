@@ -431,9 +431,9 @@ function fictitious() {
           }
           ${TEST} && {
             if [[ -z ${OPTARG:-''} ]] then
-              echo "-${flag}' "
+              echo -n "-${flag}' "
             else
-              echo "-${flag}' '${OPTARG/#-/\\-}' "
+              echo -n "-${flag}' '${OPTARG/#-/\\-}' "
             fi
           }
 
