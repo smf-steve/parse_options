@@ -6,7 +6,7 @@ akin to notes taken during a class lecture as to opposed to well structured thou
 
 Over time, these musing should be transformed more into use notes.
 
-# Completed
+## Completed
   1. Musing to determine getopts/getopt and a possible new utility
      - more musing to come
   1. A new definition of the lexicographical form of an option
@@ -16,16 +16,21 @@ Over time, these musing should be transformed more into use notes.
         - short-form
         - condensed short-form
         - long-form
-  1. implementation of a fictitious function, within getopts_example.bash, 
+  1. An implementation of a fictitious function, within getopts_example.bash, 
      that illustrates the handling of these options using bash's builtin
      `getopts` command
-
 
 
 
 # Next Steps/Work
   1. muse some more
   1. create a version of fictitious, as an exemplar for using getopt
+     - determined that getopt's definition of an option presents a number of problems
+       - rather than working around getopt, we shall
+       - refrain from implementing options with optional values -- that are not directly connected
+     - after said implementation is complete, next step will be determined
+
+## Future Steps
   1. reframe parse_option to be self_example.bash
      - use lessons learns to couch the program similar to the use of getopts/getopt
   1. create TBD specification for man git
@@ -33,181 +38,187 @@ Over time, these musing should be transformed more into use notes.
   1. Of course continually cleanup and document
 
 
-# Current Recap
-  1. getopts:
-     - nice utility to simplify the use of condensed options -lst, as opposed to -l -s -t
-     - its a hack to use the tool to use long options, e.g., --long value
-     - views the option's name as the string _after_ the first hyphen (-)
-       * given: -s and --long, the names are s and -long, respectively
-     - the programmer's switch/case statement refers to these names, and special code is need for long options
+## Current Recap
+
+  1. Definition of an option
+     - a command-line argument that is used to change the behavior of a program
+     - a word that is proceed by a hyphen (-), and is not exactly '-' or '--'
+     - there are three types of options:
+       - short-form option, with and without a value: e.g., -l, -f file
+       - condensed-form option, a sequence of short-form options
+         - only the last one may have a value: e.g., -lsf file
+       - long-form option, with and without a value
+         - begin with a double hyphen (--)
+         - the name of the option follows the double hyphen
+         - the value is follows the name by either an equal sign (=) or space
+           - e.g., --name value, --name=value
+      - limitations for getopts & getopt
+        - optional values must be physical connect to the option name
+          e.g.,   -ffile and not -f file, --long=value and not --long file
+  1. Refined definition -- not recognized by getopts nor getopt
+     - a value associated with an option with an optional value may NOT begin
+       with a hyphen
+     - a value that begins with a hyphen can be escaped, e.g., '\-value'
+     - an optional value for an option need to be directly connected to the option
 
 
-     // ## getopts optstring flag [args]
-     // ### optstring notes:
-     // 
-     //   - OPTSTRING="xy"   | two options without values
-     //   - OPTSTRING="x:y"  | option x with value and option y without a value
-     //   - OPTSTRING="x:y:" | both x and you has values
-     // 
-     //   - OPTSTRING=":x:y" | define the special char :, when an opt that is expected is missing
-     //     
-     //   - OPSTRING="x::"   | technically not supported, x has an option value
-     // 
-     // 
-     // ### flag
-     //    - one of the characters in OPTSTRING
-     //    - : the special char to denote a option that requires a value does not
-     //      * OPTARG contains the incomplete option
-     //    - ? the special char to denote we say an invalid option, 
-     //      * OPTARG contains the invalid option
-     //    - + | - 
+  1. Bash builtin `getopts`:
+     - a utility to simplify the use of command line options
+     - input example:  -ls -t file -d arg1 arg2
+     - general usage: 
+       ```
+       OPTIND=1
+       while getopts ${OPTIONS} name $@""
+         # $OPTIONS: a list of command lines options, e.g., "lst"
+         # name: the value set by getopts on subsequent calls, the name of the option
+         # $@: the parameter list to be processed
+         case $name in 
+            ( l ) : ; ;;
+            ( s ) : ; ;;
+            ( t ) : ; ;;
+          asac
+          shift $OPTIND
+       ```
+     - supports condensed options -lst, as opposed to -l -s -t
+     - short-form options with optional values is not supported
+     - long-form options (--long value) are not supported directly
+       * programmer can implement around this limitation -- but its lack luster
+       * one can views the option's name as the string _after_ the first hyphen (-)
+         - given: -s and --long, the names are s and -long, respectively
+     - A program needs to do a lot of work if they need to have either
+       * optional values with short-form options
+       * long-form options
+     - The programming style to use all forms of options is cumbersome
 
-   - getup as a hack can do the same thing as getopt, but...
 
-   - it is clear that getopt is an attempt to improve getopts
-      * while getopts .... ; do 
-      * args=$(getopt ....) ; 
-        for i in $args  ; do
-
-
-  1. Banner with a null equals value. E.g., --tag=, the possible meanings are:
-     1. '' is the meaning of --tag=  <---
-     2. the defined default (well that would be --tag )
-     3. the value of the LOOKAHEAD (well that would be --tag)
-     4. unset because there is no value (but that would be the non use of --tag
-
-  1. Unset variables in Bash
-     - you can use the "set -u" or "bash -u"
-       - to have bash check for the use of unset variables
-     - you can use [[ -v $VAR ]] to test for an unset variable
-       - but NOT when "set -u" had been issued
-     - You can then use ... [[ -z "${V+word}" ]] to make the check
-       - ${V+word} is not documented in the bash man page (at least not on my mac)
-       - If V is unset, "word" is added to the string
-
-  1. Different programming approaches when using getopts
-     1. Hyphen "-" used to introduce long-form options, with Programmer parsing the "="
+  1. Gnu `getopt`:
+      - a supplemental program used to canonicalize the presentation of command-line options
+      - I/O example:
+        - input:  -ls -t file --long=value arg1 arg2 
+        - output: -l -s -t 'file' --long 'value' -- arg1 arg2
+      - general usage:
         ```bash
-      
-        : "set -- $args"
-        while getopts -: option ; do
+        args=$(getopt --longoptions ${LONGOPS} -o ${SHORTOPS} -- $@ ) ; 
+        for i in $args ; do
+          case $i in 
+            ( -s          ) : ; ;;
+            ( -l | --list ) : ; ;;
+            ( --long      ) : ; ;;
+          esac
+        done
+        shift ${num_options}
+        ```
+        - programming style appears to be much cleaner
+
+      - supports condensed short-form options
+      - supports short-form options with optional values
+        - but said values must be connected to the option, e.g., -ffile
+      - supports long-form options:
+      - supports long form options with values:  --long=value --long value
+      - supports long-form options with optional values
+        - but said values must be connected to the option, e.g., --option=value
+
+
+   1. SHORTOPS notes:
+      - example: "+:f:d::"
+      - f:  denotes f has an associated value, -f value
+      - f:: denotes f may have an associated value,  -d, -dvalue
+      - initial character:
+        * ":" : getopts returns ':' instead of '?' for missing value, silent mode
+        * "+" : scan stops after the first non-optional character
+        * "-" : non-option parameter are emitted where they are found
+
+   1. LONGOPTS notes:
+      - example: "long,form:,optional::"
+      - usage:  --long  --form=hello1 --form hello2 --optional=value
+
+
+   1. Issues with and getopt (and getopts)
+      - short-form options that require values must be connected
+      - output of getopts for optional values is a null string ''
+        - a default value might be better
+      - pairs of tokens (name, value) are output for options with values
+        - null '' string is used for non-existing optional value
+      - single token is output for options defined not to have values
+        - for uniformity it might be best to output pairs
+
+
+## Programming Style for Using `getopts`
+  1. Programming clarity with using getopts with long-form options
+     - Note a hyphen (-) is used introduce long-form options
+
+     1. Separate Case for long-form options
+        - duplicative long-form options with and without the '='
+        ```bash
+        while getopts d-: option ; do
           case "${option}" in
             ( - ) case "${OPTARG}" in
                     ( init_file=* ) 
                       : programmer separates the argument
-                      ARG=${OPTARG#init_file=}
+                      OPTARG=${OPTARG#init_file=}
                     ;;
                     ( init_file ) 
-                      ARG=${!OPTIND} ; (( OPTIND++ ))
+                      OPTARG=${!OPTIND} ; (( OPTIND++ ))
                     : ;;
                   esac
                   ;;
+            ( d ) ...
         ```
-     1. With the splitting up an option base based upon an = 
+        - Issue need to manager required vs optional values differently
+        - The above is for required values
+
+      1. Combined case for short- and long-form options
+        - introducing OPTNAME that does not include the - or --
+        - need to ensure we don't have -l and --l as valid options
+        ```bash
+        while getopts h489-: option ; do
+          OPTNAME=${option%-}
+          case "${OPTNAME}" in
+            ( half ) ;;
+            ( some ) ;;
+            ( h )    ;;
+            ( 4 )    ;;
+          esac
+        ```
+        - Issue need to deal with OPTVAR
+
+     1. Splitting up an attached valued based upon an = 
         ```bash
          while getopts h489-: option ; do
-           # case "${option}${OPTAR}"
+           if [[ ${OPTVAR+set} == -* ]] ; then
+              option=${option%=*}
+              OPTARG=${option#*=}
+           fi
            case "${option}" in
-             ( -half ) : OPTARG="";;
-             ( -some ) : OPTARG="value";;
-             ( h )  roman_form_half_set FALSE   ;;
-             ( 4 )  RN_SUBTRACTIVE_FORM_4=FALSE ;;
-             ( 8 )  RN_SUBTRACTIVE_FORM_8=TRUE  ;;
-             ( 9 )  RN_SUBTRACTIVE_FORM_9=FALSE ;;
+             ( -half ) ;;
+             ( -some ) ;;
+             ( h )     ;;
+             ( 4 )     ;;
            esac
        ``` 
-     1. Introducing OPTNAME not including the - or --
+       - Issue: if the value is in a separate parameter
+       - The above is for values that are directly connected
+
+     1. Introduction of OPTNAME that includes the - and -- 
+        - Appears to be the cleanest
         ```bash
         while getopts h489-: option ; do
+          OPNAME=-${option%=*}
+          if [[ ${OPTVAR+set} == -* ]] ; then
+            OPTARG=${option#*=}
+          fi
           case "${OPTNAME}" in
-            ( half ) : OPTARG="";;                # option == -
-            ( some ) : OPTARG="value";;           # option == -
-            ( h )  roman_form_half_set FALSE   ;; # option == h
-            ( 4 )  RN_SUBTRACTIVE_FORM_4=FALSE ;; # option == 4
-            ( 8 )  RN_SUBTRACTIVE_FORM_8=TRUE  ;; # option == 8
-            ( 9 )  RN_SUBTRACTIVE_FORM_9=FALSE ;; # option == 9
+            ( --half ) ;;
+            ( --some ) ;;
+            ( -h )     ;;
+            ( -4 )     ;;
           esac
         ```
-
-     1. Introduction of OPTNAME that includes the OPTPREFIX, this seems more better
-        ```bash
-        while getopts h489-: option ; do
-          case "${OPTNAME}" in
-            ( --half ) : OPTARG="";;               # option == -
-            ( --some ) : OPTARG="value";;          # option == -
-            ( -h )  roman_form_half_set FALSE   ;; # option == h
-            ( -4 )  RN_SUBTRACTIVE_FORM_4=FALSE ;; # option == 4
-            ( -8 )  RN_SUBTRACTIVE_FORM_8=TRUE  ;; # option == 8
-            ( -9 )  RN_SUBTRACTIVE_FORM_9=FALSE ;; # option == 9
-          esac
-        ```
-
-   1. gnu getopt OPTSTRING notes
-      - f:  denotes f has an associated value, -f value
-      - f:: denotes f may have an associated value,  -f, -fvalue
-      - initial character:
-        * ":" : getopt returns ':' instead of '?'
-        * "+" : scan stops after the first non-optional character
-        * "-" : non-option parameter are emitted where they are found
-        ```bash
-        $ getopt -o "-C:a" -- -C . commit -a
-        -C -C '.' 'commit' -a --
-        $ getopt -o "+C:a" -- -C . commit -a
-        -C '.' -- 'commit' '-a'
-
-        ```
-   1. getopt OPTSTRING
-      - initial character:
-        * ":" denotes silent mode
+        - Issue: if the value is in a separate parameter
+        - The above is for values that are directly conected
 
 
-  1. getopt:
-     - canonicalizes the presentation of options
-     - leverage the getopts approach for support of condensed options
-     - furthers error checking of missing arguments, etc., 
-     - the naming of options is more using: i.e., its -l for -l and --long for --long
-     - the programmer's switch/case statement is more uniform
-       * moreover a single case pattern can more easily refer to both a long and short option
-         ```bash
-         ( -l | --list )   # place the code here associated
-                           # with the here "list" option
-         ```
-     - the programmer's switch/case code falls into a recognized pattern
-
-     - creates pairs of arguments for options that may and must have a requirement
-       * '--option-require'  'value'  '--option-may' ''
-       * but doesn't do this for those that DON'T have an arg.
-       * 'option-noarg'    '--option-require'  'value'  '--option-may' ''
-       * should be
-       * 'option-noarg' '' '--option-require'  'value'  '--option-may' ''
-
-
-        // - getopt: a bash utility that standardize the presentation of command-line options
-       //    * Definition of an option
-       //      - a word that is proceed by a hyphen (-), and is not exactly '-' or '--'
-       //        * such a word may contain more than one option
-       //        * such a word may have a suffix which is the argument to the last option
-       //        * a valid option is denoted by being included within the optstring
-       //        * a valid option is determined to have an argument if it is followed by a colon       // (:) within the optstring
-       //    * getopt Usage:         getopt "optstring" {args}
-       //    * Sample Command Line:  "command -a -o value -b arg1 -x"
-       //    * Example Usage:
-       //      ```bash
-       //      args=$(getopt "abo:c" -acovalue -b arg1 -x)
-       //      returnval=$?
-       //      set -- "$args"
-       //      for i in $args ; do 
-       //      ```
-       //    * Process:
-       //      - scans the command line until it finds the first non-option argument
-       //      - validates that each option is valid
-       //      - separates a string of options into single options
-       //        * e.g., "-abc" --> "-a -b -c"
-       //      - separates an option from its argument
-       //         * e.g., "-otest" -> -o test
-       //      - inserts "--" place after the _first_ non-option identified
-       //    * Example Result:       ans == -a -c -o value -b -- arg1 -x
-
+---
 
   1. clo: command line options
 
@@ -304,33 +315,37 @@ Over time, these musing should be transformed more into use notes.
      - could be modeled as:  --x on,  --x off
      - the +x could be just a throw back to the shell
 
+
   1. Support for Subcommands
-     * getopt is not good for use of programs with subcommands
-       - E.g., 
-       ```
-        $ getopt "C:a" git -C . commit -a
-        -C . -a -- git commit
-        ```
-     * Note the '-a' option for commit has become an option for `git`
+     * getopt can be used for subcommands
+       - final syntax:
+         ```
+         command [options] -- subcommand [options] -- [args]
+         ```
+
+       - but NO shuffling needs to be employed
+       - moreover, a secondary call needs to made
+         1. call getopt to process (with no shuffle)
+         1. find the subcommand
+         1. call getops for the params after the subcommand
+       - you could argue that it is up to the subcommand to
+         process its command line args.
 
 
 # Thoughts:
-  1. Use of ;;& and ;& seems not to work.  But it does, the issue I had
-     is in my use case, I want to redefine the value of name.  It appears
-     the name is captured read-only value. I.e., any change to name affects
-     only the code within the case arms but not the testing of each case pattern
-       - write some code to test this out
-       - options to work around
-         - restructure the code so that : is followed by next arm you want to address the issue -- this might not be possible in my case here
-         - others?
+
+  1. Banner with a null equals value. E.g., --tag=, the possible meanings are:
+     1. '' is the meaning of --tag=  <---
+     2. the defined default (well that would be --tag )
+     3. the value of the LOOKAHEAD (well that would be --tag)
+     4. unset because there is no value (but that would be the non use of --tag
+
+
          
   1. It appears the short-form options and long-form options with 1 char are treated as different things
      - should they be unified
      - perform some tests to validate
 
-  1. what to do with reporting an error if a required value is missing its
-     required value;;  
-     - currently:  '-l' {error} 
 
   1. We have a rule that states that all options start with a hyphen (-), which differs from getopts/getopts
      - one issue is options with optional values, in which said value can be a negative number.  (We can also include explicit positive numbers, i.e., +45.)
@@ -359,6 +374,13 @@ Over time, these musing should be transformed more into use notes.
         - given:  --tag --
         - --> '--tag=' , '--tag={default}', '--tag' --tag {lambda}
      1. how to present the prefix appropriate: +,-,++
+
+
+  1. what to do with reporting an error if a required value is missing its
+     required value;;  
+     - currently:  '-l' {error} 
+
+
 
   1. We have an issue with regard to how options are used throughout industry
      - consider git and openssl  AND getopt --alternative 
@@ -402,6 +424,31 @@ $ getopt -o "-t:" -a -l "tag:" -- --tag -tag hello --tag=hello -t=hello -t hello
 
 ====
 
+     // ## getopts optstring flag [args]
+     // ### optstring notes:
+     // 
+     //   - OPTSTRING="xy"   | two options without values
+     //   - OPTSTRING="x:y"  | option x with value and option y without a value
+     //   - OPTSTRING="x:y:" | both x and you has values
+     //   - OPSTRING="x::"   | not supported, x has an option value
+     // 
+     //   - OPTSTRING=":xy"  | if the first char is an :
+     //                      | we are in silent mode
+     // 
+     // ### flag
+     //    - one of the characters in OPTSTRING
+     //    - : the special char to denote a option that requires a value does not
+     //      * OPTARG contains the flag
+     //    - ? the special char to denote we say an invalid option, 
+     //      * OPTARG contains the flag
+
+   - getopts as a hack can do the same thing as getopt, but...
+
+
+
+
+## Musing on the Definition of an Option
+
   1. Can the value of an option begin with a '-'?
      * Consider -l being an option that requires a value
      * Are the following valid:  -l-help or -l -help
@@ -411,11 +458,24 @@ $ getopt -o "-t:" -a -l "tag:" -- --tag -tag hello --tag=hello -t=hello -t hello
   1. Interpretation issue associated with require values
      - If the next command-line parameter begins with an "-"
        1. so what -- use it, it is required
-       1. don't use it -- throw an error
-       1. don't use it -- use a default value
+       1. don't use it -- throw an error,      because it is the next option
+       1. don't use it -- use a default value, because it is the next option
           - this last option implies you should use an optional value
-     - getopts does:
-     - getopt does:
+     - getopts does: uses it, because it is required
+     - getopt does:  uses it, because it is required
+     - my view: it looks like an option, so treat it like an option
+       * this implies that values can't start with a -, 
+       * escape the value to ensure things are '\-45' correct
+
+  1. Interpretation issue associated with optional values
+     - If the next command-line parameter begins with an "-"
+       1. so what -- it is there use it --- very bad choice
+       1. don't use it -- use a default value, because it is the next option
+     - getopts does not support this
+     - getopt does NOT use it, is inserts a default value
+       * optional values must be directly connected to the option ("f::")
+         - -ffile  : valid
+         - -f file : invalid
 
 
   1. Interpretation issues associated with optional values
@@ -439,52 +499,90 @@ $ getopt -o "-t:" -a -l "tag:" -- --tag -tag hello --tag=hello -t=hello -t hello
          | --debug N    |   N   |
          | --debug=''   |   ''  |
 
-1. getopts special variable is very special
-   1. getopts has an internal variable that is used to manage condensed options
-   1. the variable OPTIND is monitored to determined if the value is updated
-      - said update is NOT related to a change in value
-      - the change of value could be OPTIND=${OPTIND}
-   ```bash
-   set -- -abcd -abcd -abcd -abcd
-   OPTIND=1
-   for (( OPTIND=1, x=1; x <= 10; x++ )) ; do
-     getopts :abcd flag
-     echo $flag '; ' $OPTIND
-
-     OPTIND=${OPTIND}
-   done
-   ```
-   ```
-   a ;  1
-   a ;  1
-   a ;  1
-   a ;  1
-   a ;  1
-   a ;  1
-   ```
-   ```bash
-   set -- -abcd -abcd -abcd -abcd
-   OPTIND=1
-   for (( OPTIND=1, x=1; x <= 10; x++ )) ; do
-   
-     getopts :abcd flag
-     echo $flag '; ' $OPTIND
-   
-     # OPTIND=${OPTIND}
-   done
-   ```
-   ```
-   a ;  1
-   b ;  1
-   c ;  1
-   d ;  2
-   a ;  2
-   b ;  2
-   c ;  2
-   d ;  3
-   a ;  3
-   b ;  3
-   ```
 
 
+     // ## getopts optstring flag [args]
+     // ### optstring notes:
+     // 
+     //   - OPTSTRING="xy"   | two options without values
+     //   - OPTSTRING="x:y"  | option x with value and option y without a value
+     //   - OPTSTRING="x:y:" | both x and you has values
+     //   - OPSTRING="x::"   | not supported, x has an option value
+     // 
+     //   - OPTSTRING=":xy"  | if the first char is an :
+     //                      | we are in silent mode
+     // 
+     // ### flag
+     //    - one of the characters in OPTSTRING
+     //    - : the special char to denote a option that requires a value does not
+     //      * OPTARG contains the flag
+     //    - ? the special char to denote we say an invalid option, 
+     //      * OPTARG contains the flag
+
+   - getopts as a hack can do the same thing as getopt, but...
+
+## Lessons Learn
+
+  1. Unset variables in Bash
+     - you can use the "set -u" or "bash -u"
+       - to have bash check for the use of unset variables
+     - you can use [[ -v $VAR ]] to test for an unset variable
+       - but NOT when "set -u" had been issued
+     - You can then use ... [[ -z "${V+word}" ]] to make the check
+       - If V is unset, "word" is added to the string
+
+
+  1. The Bash "case" command as each arm terminated with one of the following
+     - ;;  : normal termination
+     - ;&  : continue to the next arm without testing the associated pattern
+     - ;;& : continue to the next ares in sequence testing the associated patter
+     * the order of your case arms becomes very important
+     * you can't alter the value of the name in : 'case name in'
+       - each pattern uses the original value of name when performing test
+       - this was unexpected but in reflection this should be the semantics
+
+
+
+  1. getopts (a bash builtin) has a very special variable, very special
+     1. getopts has an internal variable that is used to manage condensed options
+     1. the variable OPTIND is monitored to determined if the value is updated
+        - said update is NOT related to a change in value
+        - the change of value could be OPTIND=${OPTIND}
+     ```bash
+     set -- -ab -cd -a
+     for (( OPTIND=1, x=1; x <= 3; x++ )) ; do
+       getopts :abcd flag
+       echo $flag '; ' $OPTIND
+  
+       OPTIND=${OPTIND}
+     done
+     ```
+     ```
+     a ;  1
+     a ;  1
+     a ;  1
+     a ;  1
+     a ;  1
+     ```
+     ```bash
+     set -- -ab -cd -ab 
+     for (( OPTIND=1, x=1; x <= 5 ; x++ )) ; do
+     
+       getopts :abcd flag
+       echo $flag '; ' $OPTIND
+     
+       # OPTIND=${OPTIND}
+     done
+     ```
+     ```
+     a ;  1
+     b ;  1
+     c ;  2
+     d ;  2
+     a ;  3
+     ```
+     - the above code illustrates the behavior change in getopts when
+       * you don't update the value of OPTIND
+       * you update the value OPTIND *BUT* you don't change the value
+       
 

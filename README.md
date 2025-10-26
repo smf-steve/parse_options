@@ -43,7 +43,7 @@ Below is a work-in-progress framing of the future README.md file
       - Benefits:
         - leverages getopts for short options
           - adds the ability to do optional arguments -- but such an argument MUST be connected to the option:  e.g. -dfile but not -d file
-        - add support for multi-character 
+        - add support for multi-character options
         - multi-character options can have optional arguments
           - but MUST also be connected to the option via an '='
         - user code refers to the --banner or -flag in the program
@@ -58,19 +58,32 @@ Below is a work-in-progress framing of the future README.md file
           * program's code still must manage which have arguments or not
             - (My getops with --banner support address this by the introduction of the OPTVALUE variable)
 
-       - Notes:
-         * supports alternative presentation of long options which begin with a single "-"
-         * Shuffling of args can be turned of... so says the docs
-           - does it, what value is there in shuffling
-           - +, - as the first character in the shortops, but with the correct usage
-             - getopts -o "+d::" -- params
-             ```
-             $ getopt -o "+xd::" --  -xd one done -xdtwo -dthree -d four -x arg1
-                -x -d '' -- 'one' 'done' '-xdtwo' '-dthree' '-d' 'four' '-x' 'arg1'
-             $ getopt "xd::"  -xd one done -xdtwo -dthree -d four -x arg1
-                -x -d  -x -d two -d three -d  -x -- one done four arg1
-             ```
-           - notice the extract of the first -d, no shuffle
+      - Notes:
+        * supports alternative presentation of long options which begin with a single "-"
+        * Shuffling of args can be turned off... with the use of a + 
+          - does it, what value is there in shuffling
+          - +, - as the first character in the shortops, but with the correct usage
+            - getopts -o "+d::" -- params
+              ```
+              $ getopt -o "+xd::" --  -xd one done -xdtwo -dthree -d four -x arg1
+                 -x -d '' -- 'one' 'done' '-xdtwo' '-dthree' '-d' 'four' '-x' 'arg1'
+
+              $ getopt "xd::"  -xd one done -xdtwo -dthree -d four -x arg1
+                 -x -d  -x -d two -d three -d  -x -- one done four arg1
+              ```
+            - notice the extract of the first -d, no shuffle
+         
+
+        * If the option has an optional argument, it must be written directly after the long option name, separated by '=', if present (if you add the '=' but nothing behind it, it is interpreted as if no argument was present; this is a slight bug, see the BUGS)
+          - I.e.,  --banner=  is determined to be a "slight bug"
+          - Note   --banner='' is equivalent to --banner=
+            - Possible change, is if you can define a default
+              -  --banner='${default}'  -->  --banner '${default}'
+              -  --banner='${lambda}'  -->  --banner '${lambda}'
+
+        * Each parameter not starting with a '-', and not a required argument of a previous option, is a non-option parameter.  
+          - hence   -f -file    , -file is deemed to be a non-option parameter
+          - this is the difference between gnu getopts definition and mine. 
 
 
   * getopt: a bash utility that standardize the presentation of command-line options
